@@ -15,7 +15,6 @@ export default function Dashboard() {
   const [newSkill, setNewSkill] = useState('');
 
   const handleSaveProfile = async () => {
-    // Replace with your actual backend update endpoint
     try {
       const response = await fetch('http://localhost:8080/user/update', {
         method: 'PUT',
@@ -27,17 +26,17 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        updateUser(formData); // Update local context
+        updateUser(formData); 
         setIsEditing(false);
-        alert('Profile updated successfully!');
+        alert('Profile updated successfully in Database!');
       } else {
-        alert('Failed to update profile.');
+        // This will grab the exact error message from Spring Boot
+        const errText = await response.text(); 
+        alert(`Backend Error: ${response.status} - ${errText}`);
       }
     } catch (err) {
-      console.error(err);
-      // Fallback for UI testing if endpoint isn't ready
-      updateUser(formData);
-      setIsEditing(false);
+      console.error("Network Error:", err);
+      alert('Network Error: Could not reach the server.');
     }
   };
 
