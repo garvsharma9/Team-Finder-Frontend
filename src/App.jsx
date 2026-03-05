@@ -12,7 +12,8 @@ import Feed from './pages/Feed';
 import ManageTeams from './pages/ManageTeams';
 import PublicProfile from './pages/PublicProfile';
 import Sidebar from './components/Sidebar';
-
+import Chat from './pages/Chat';
+//imports done
 function App() {
   return (
     <AuthProvider>
@@ -31,6 +32,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
