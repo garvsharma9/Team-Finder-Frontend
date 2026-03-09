@@ -1353,6 +1353,410 @@
 
 
 
+// import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+// import { AuthContext } from '../context/AuthContext';
+
+// export default function Chat() {
+//   const { user, token } = useContext(AuthContext);
+//   const [viewMode, setViewMode] = useState('team');
+//   const [teams, setTeams] = useState([]);
+//   const [selectedTeamId, setSelectedTeamId] = useState('');
+//   const [messages, setMessages] = useState([]);
+//   const [dmConversations, setDmConversations] = useState([]);
+//   const [selectedDmUser, setSelectedDmUser] = useState('');
+//   const [dmMessages, setDmMessages] = useState([]);
+//   const [draft, setDraft] = useState('');
+//   const [loadingTeams, setLoadingTeams] = useState(true);
+//   const [loadingMessages, setLoadingMessages] = useState(false);
+//   const [loadingDmMessages, setLoadingDmMessages] = useState(false);
+//   const [sending, setSending] = useState(false);
+//   const [socketReady, setSocketReady] = useState(false);
+//   const [activeProfileCardId, setActiveProfileCardId] = useState('');
+//   const [showTeamMembersCard, setShowTeamMembersCard] = useState(false);
+//   const [unreadTeamById, setUnreadTeamById] = useState({});
+//   const [unreadDmByUser, setUnreadDmByUser] = useState({});
+//   const [error, setError] = useState('');
+
+//   const endRef = useRef(null);
+//   const socketRef = useRef(null);
+//   const selectedTeamRef = useRef('');
+//   const selectedDmRef = useRef('');
+//   const viewModeRef = useRef('team');
+//   const unreadTeamRef = useRef({});
+//   const unreadDmRef = useRef({});
+
+//   // --- LOGIC METHODS PRESERVED ---
+//   const selectedTeam = useMemo(() => teams.find(team => team.id === selectedTeamId) || null, [teams, selectedTeamId]);
+  
+//   const selectedTeamMembers = useMemo(() => {
+//     if (!selectedTeam) return [];
+//     const owner = selectedTeam.username ? [selectedTeam.username] : [];
+//     const accepted = Array.isArray(selectedTeam.acceptedUsernames) ? selectedTeam.acceptedUsernames : [];
+//     return Array.from(new Set([...owner, ...accepted].filter(Boolean)));
+//   }, [selectedTeam]);
+
+//   const unreadStorageKey = user?.username ? `teamFinderUnread_${user.username}` : null;
+//   const totalTeamUnread = Object.values(unreadTeamById).reduce((sum, count) => sum + count, 0);
+//   const totalDmUnread = Object.values(unreadDmByUser).reduce((sum, count) => sum + count, 0);
+
+//   const getInitials = (name) => {
+//     if (!name) return '?';
+//     const parts = name.trim().split(/\s+/);
+//     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+//     return (parts[0][0] + parts[1][0]).toUpperCase();
+//   };
+
+//   const avatarPalette = ['#007AFF', '#FF9500', '#5856D6', '#FF2D55', '#34C759'];
+//   const avatarColor = (name) => {
+//     let hash = 0;
+//     const value = name || '';
+//     for (let i = 0; i < value.length; i += 1) hash = value.charCodeAt(i) + ((hash << 5) - hash);
+//     return avatarPalette[Math.abs(hash) % avatarPalette.length];
+//   };
+
+//   const formatTime = (value) => {
+//     if (!value) return '';
+//     const date = new Date(value);
+//     if (Number.isNaN(date.getTime())) return '';
+//     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+//   };
+
+//   const fetchMyTeams = async () => {
+//     try {
+//       setLoadingTeams(true);
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       if (!response.ok) throw new Error('Failed to load teams');
+//       const data = await response.json();
+//       setTeams(data);
+//       if (data.length > 0 && !selectedTeamId) setSelectedTeamId(data[0].id);
+//     } catch (err) { setError('Could not load your teams.'); } finally { setLoadingTeams(false); }
+//   };
+
+//   const fetchMessages = async (teamId) => {
+//     if (!teamId) return;
+//     try {
+//       setLoadingMessages(true);
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       if (!response.ok) throw new Error('Failed to load messages');
+//       const data = await response.json();
+//       setMessages(data);
+//     } catch (err) { setError('Could not load team chat messages.'); } finally { setLoadingMessages(false); }
+//   };
+
+//   const fetchDmConversations = async () => {
+//     try {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       if (!response.ok) throw new Error('Failed to load direct conversations');
+//       const data = await response.json();
+//       setDmConversations(data);
+//     } catch (err) { setError('Could not load direct conversations.'); }
+//   };
+
+//   const fetchDmMessages = async (otherUsername) => {
+//     if (!otherUsername) return;
+//     try {
+//       setLoadingDmMessages(true);
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       if (!response.ok) throw new Error('Failed to load direct messages');
+//       const data = await response.json();
+//       setDmMessages(data);
+//     } catch (err) { setError('Could not load direct messages.'); } finally { setLoadingDmMessages(false); }
+//   };
+
+//   const upsertConversation = (otherUsername, lastContent, lastTimestamp) => {
+//     setDmConversations(prev => {
+//       const existing = prev.find(item => item.otherUsername === otherUsername);
+//       if (existing) return [{ ...existing, lastContent, lastTimestamp }, ...prev.filter(item => item.otherUsername !== otherUsername)];
+//       return [{ otherUsername, lastContent, lastTimestamp }, ...prev];
+//     });
+//   };
+
+//   const startPrivateChat = (username) => {
+//     if (!username || username === user?.username) return;
+//     setViewMode('direct');
+//     setSelectedDmUser(username);
+//     fetchDmMessages(username);
+//     if (!dmConversations.some(conv => conv.otherUsername === username)) upsertConversation(username, '', new Date().toISOString());
+//   };
+
+//   const subscribeTeam = (teamId) => {
+//     const socket = socketRef.current;
+//     if (!teamId || !socket || socket.readyState !== WebSocket.OPEN) return;
+//     socket.send(JSON.stringify({ type: 'subscribe', teamId }));
+//   };
+
+//   const subscribePrivate = (otherUsername) => {
+//     const socket = socketRef.current;
+//     if (!otherUsername || !socket || socket.readyState !== WebSocket.OPEN) return;
+//     socket.send(JSON.stringify({ type: 'private_subscribe', otherUsername }));
+//   };
+
+//   const persistUnreadState = (teamMap, dmMap) => {
+//     if (!unreadStorageKey) return;
+//     const payload = { team: teamMap, dm: dmMap };
+//     localStorage.setItem(unreadStorageKey, JSON.stringify(payload));
+//     window.dispatchEvent(new Event('teamfinder-unread-updated'));
+//   };
+
+//   const markTeamAsRead = (teamId) => {
+//     if (!teamId) return;
+//     setUnreadTeamById(prev => {
+//       if (!prev[teamId]) return prev;
+//       const next = { ...prev }; delete next[teamId];
+//       unreadTeamRef.current = next;
+//       persistUnreadState(next, unreadDmRef.current);
+//       return next;
+//     });
+//   };
+
+//   const markDmAsRead = (otherUsername) => {
+//     if (!otherUsername) return;
+//     setUnreadDmByUser(prev => {
+//       if (!prev[otherUsername]) return prev;
+//       const next = { ...prev }; delete next[otherUsername];
+//       unreadDmRef.current = next;
+//       persistUnreadState(unreadTeamRef.current, next);
+//       return next;
+//     });
+//   };
+
+//   const handleSend = async () => {
+//     const content = draft.trim();
+//     if (!content) return;
+//     const socket = socketRef.current;
+//     const useSocket = socket && socket.readyState === WebSocket.OPEN;
+//     try {
+//       setSending(true);
+//       if (viewMode === 'team') {
+//         if (!selectedTeamId) return;
+//         if (useSocket) socket.send(JSON.stringify({ type: 'message', teamId: selectedTeamId, content }));
+//         else {
+//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
+//             method: 'POST',
+//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ content })
+//           });
+//           if (!response.ok) throw new Error('Failed to send');
+//           const newMessage = await response.json();
+//           setMessages(prev => [...prev, newMessage]);
+//         }
+//       } else {
+//         if (!selectedDmUser) return;
+//         if (useSocket) socket.send(JSON.stringify({ type: 'private_message', toUsername: selectedDmUser, content }));
+//         else {
+//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
+//             method: 'POST',
+//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ content })
+//           });
+//           if (!response.ok) throw new Error('Failed to send');
+//           const newMessage = await response.json();
+//           setDmMessages(prev => [...prev, newMessage]);
+//           upsertConversation(selectedDmUser, newMessage.content, newMessage.timestamp);
+//         }
+//       }
+//       setDraft(''); setError('');
+//     } catch (err) { setError('Could not send message.'); } finally { setSending(false); }
+//   };
+
+//   // --- USE EFFECTS ---
+//   useEffect(() => { if (!token) return; fetchMyTeams(); fetchDmConversations(); }, [token]);
+//   useEffect(() => { if (!unreadStorageKey) return; try { const raw = localStorage.getItem(unreadStorageKey); if (!raw) return; const parsed = JSON.parse(raw); setUnreadTeamById(parsed?.team || {}); setUnreadDmByUser(parsed?.dm || {}); } catch (e) { setUnreadTeamById({}); setUnreadDmByUser({}); } }, [unreadStorageKey]);
+//   useEffect(() => { if (teams.length === 0) { setSelectedTeamId(''); return; } const exists = teams.some(team => team.id === selectedTeamId); if (!exists) setSelectedTeamId(teams[0].id); }, [teams, selectedTeamId]);
+//   useEffect(() => { selectedTeamRef.current = selectedTeamId; }, [selectedTeamId]);
+//   useEffect(() => { selectedDmRef.current = selectedDmUser; }, [selectedDmUser]);
+//   useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
+//   useEffect(() => { unreadTeamRef.current = unreadTeamById; }, [unreadTeamById]);
+//   useEffect(() => { unreadDmRef.current = unreadDmByUser; }, [unreadDmByUser]);
+//   useEffect(() => { if (!token || !selectedTeamId) return; fetchMessages(selectedTeamId); markTeamAsRead(selectedTeamId); setShowTeamMembersCard(false); }, [token, selectedTeamId]);
+//   useEffect(() => { if (!token || !selectedDmUser) return; fetchDmMessages(selectedDmUser); markDmAsRead(selectedDmUser); }, [token, selectedDmUser]);
+//   useEffect(() => { if (viewMode !== 'team') setShowTeamMembersCard(false); }, [viewMode]);
+
+//   useEffect(() => {
+//     if (!token) return;
+//     // Updated to point to your space
+//     const wsUrl = `wss://garvsharma9-teamfinder-api.hf.space/ws-chat?token=${encodeURIComponent(token)}`;
+//     const socket = new WebSocket(wsUrl);
+//     socketRef.current = socket;
+//     socket.onopen = () => { setSocketReady(true); if (selectedTeamRef.current) subscribeTeam(selectedTeamRef.current); if (selectedDmRef.current) subscribePrivate(selectedDmRef.current); };
+//     socket.onmessage = event => {
+//         try {
+//             const payload = JSON.parse(event.data);
+//             if (payload.type === 'message' && payload.message) {
+//                 const incomingTeamId = payload.teamId;
+//                 if (incomingTeamId === selectedTeamRef.current) {
+//                     setMessages(prev => { const exists = prev.some(item => item.id === payload.message.id); return exists ? prev : [...prev, payload.message]; });
+//                 }
+//                 if (!(viewModeRef.current === 'team' && incomingTeamId === selectedTeamRef.current)) {
+//                     setUnreadTeamById(prev => { const next = { ...prev, [incomingTeamId]: (prev[incomingTeamId] || 0) + 1 }; unreadTeamRef.current = next; persistUnreadState(next, unreadDmRef.current); return next; });
+//                 }
+//             } else if (payload.type === 'private_message' && payload.message) {
+//                 const incoming = payload.message;
+//                 const isCurrentThread = incoming.senderUsername === selectedDmRef.current || incoming.receiverUsername === selectedDmRef.current;
+//                 if (isCurrentThread) {
+//                     setDmMessages(prev => { const exists = prev.some(item => item.id === incoming.id); return exists ? prev : [...prev, incoming]; });
+//                 }
+//                 const otherUsername = incoming.senderUsername === user?.username ? incoming.receiverUsername : incoming.senderUsername;
+//                 upsertConversation(otherUsername, incoming.content, incoming.timestamp);
+//                 if (!(viewModeRef.current === 'direct' && selectedDmRef.current === otherUsername)) {
+//                     setUnreadDmByUser(prev => { const next = { ...prev, [otherUsername]: (prev[otherUsername] || 0) + 1 }; unreadDmRef.current = next; persistUnreadState(unreadTeamRef.current, next); return next; });
+//                 }
+//             }
+//         } catch (e) { setError('Invalid payload'); }
+//     };
+//     socket.onclose = () => setSocketReady(false);
+//     return () => { setSocketReady(false); socket.close(); };
+//   }, [token, user?.username]);
+
+//   useEffect(() => { subscribeTeam(selectedTeamId); }, [selectedTeamId, socketReady]);
+//   useEffect(() => { subscribePrivate(selectedDmUser); }, [selectedDmUser, socketReady]);
+//   useEffect(() => { if (!socketReady) return; teams.forEach(team => subscribeTeam(team.id)); }, [teams, socketReady]);
+//   useEffect(() => { if (!socketReady) return; dmConversations.forEach(conv => subscribePrivate(conv.otherUsername)); }, [dmConversations, socketReady]);
+//   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, dmMessages, viewMode]);
+  
+//   useEffect(() => {
+//     const handleOutsideClick = (event) => {
+//         const target = event.target;
+//         if (target.closest('[data-profile-card="true"]') || target.closest('[data-profile-trigger="true"]') || target.closest('[data-team-members-card="true"]') || target.closest('[data-team-members-trigger="true"]')) return;
+//         setActiveProfileCardId(''); setShowTeamMembersCard(false);
+//     };
+//     document.addEventListener('mousedown', handleOutsideClick);
+//     return () => document.removeEventListener('mousedown', handleOutsideClick);
+//   }, []);
+
+//   const activeMessages = viewMode === 'team' ? messages : dmMessages;
+//   const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
+
+//   // --- STYLING ---
+//   const glassStyle = {
+//     background: 'rgba(255, 255, 255, 0.7)',
+//     backdropFilter: 'blur(20px)',
+//     border: '1px solid rgba(255, 255, 255, 0.4)',
+//     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+//   };
+
+//   const styles = {
+//     shell: { maxWidth: '1240px', margin: '0 auto', padding: '20px', fontFamily: '-apple-system, sans-serif' },
+//     frame: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', height: '85vh' },
+//     card: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
+//     chatCard: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'grid', gridTemplateRows: '80px 1fr 80px' },
+//     sideHeader: { padding: '20px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
+//     toggleWrap: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
+//     toggleBtn: (active) => ({
+//       padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+//       backgroundColor: active ? '#007AFF' : 'rgba(0,0,0,0.05)',
+//       color: active ? '#fff' : '#555', fontWeight: '600', fontSize: '13px'
+//     }),
+//     sideScroll: { flex: 1, overflowY: 'auto', padding: '10px' },
+//     sideItem: (isActive) => ({
+//       display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', cursor: 'pointer',
+//       backgroundColor: isActive ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
+//       transition: 'all 0.2s'
+//     }),
+//     avatar: (name) => ({
+//       width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+//       backgroundColor: avatarColor(name), color: '#fff', fontWeight: 'bold', fontSize: '14px'
+//     }),
+//     chatTop: { padding: '0 25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.05)' },
+//     thread: { overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column' },
+//     bubble: (mine) => ({
+//       padding: '12px 18px', maxWidth: '70%', borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+//       backgroundColor: mine ? '#007AFF' : 'white',
+//       color: mine ? '#fff' : '#000', marginBottom: '10px', alignSelf: mine ? 'flex-end' : 'flex-start',
+//       boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+//     }),
+//     inputWrap: { padding: '15px 25px', display: 'flex', gap: '10px', alignItems: 'center' },
+//   };
+
+//   if (loadingTeams) return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading chat...</div>;
+
+//   return (
+//     <div style={styles.shell}>
+//       <div style={styles.frame}>
+//         <div style={styles.card}>
+//           <div style={styles.sideHeader}>
+//             <div style={styles.toggleWrap}>
+//               <button style={styles.toggleBtn(viewMode === 'team')} onClick={() => setViewMode('team')}>Team</button>
+//               <button style={styles.toggleBtn(viewMode === 'direct')} onClick={() => setViewMode('direct')}>Direct</button>
+//             </div>
+//           </div>
+//           <div style={styles.sideScroll}>
+//             {viewMode === 'team' ? 
+//                 teams.map(team => (
+//                     <div key={team.id} style={styles.sideItem(team.id === selectedTeamId)} onClick={() => setSelectedTeamId(team.id)}>
+//                         <div style={styles.avatar(team.teamName)}>{getInitials(team.teamName)}</div>
+//                         <div><div style={{fontWeight: '600'}}>{team.teamName}</div><div style={{fontSize: '12px', opacity: 0.6}}>{team.competitionName}</div></div>
+//                     </div>
+//                 ))
+//             : 
+//                 dmConversations.map(conv => (
+//                     <div key={conv.otherUsername} style={styles.sideItem(conv.otherUsername === selectedDmUser)} onClick={() => setSelectedDmUser(conv.otherUsername)}>
+//                         <div style={styles.avatar(conv.otherUsername)}>{getInitials(conv.otherUsername)}</div>
+//                         <div style={{fontWeight: '600'}}>{conv.otherUsername}</div>
+//                     </div>
+//                 ))
+//             }
+//           </div>
+//         </div>
+
+//         <div style={styles.chatCard}>
+//           <div style={styles.chatTop}>
+//             <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+//                 <div style={styles.avatar(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}>
+//                     {getInitials(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}
+//                 </div>
+//                 <div>
+//                     {/* FIXED: CORRECT NAME DISPLAY IN HEADER */}
+//                     <div style={{fontWeight: '700', fontSize: '18px'}}>
+//                         {viewMode === 'team' ? (selectedTeam?.teamName || 'Select a Team') : (selectedDmUser || 'Select a Chat')}
+//                     </div>
+//                     <div style={{fontSize: '12px', color: '#86868b'}}>
+//                         {viewMode === 'team' ? selectedTeam?.competitionName : 'Private Message'}
+//                     </div>
+//                 </div>
+//             </div>
+//             <div style={{color: socketReady ? '#34C759' : '#FF9500', fontSize: '12px', fontWeight: 'bold'}}>
+//                 {socketReady ? '● Live connected' : '● Reconnecting...'}
+//             </div>
+//           </div>
+
+//           <div style={styles.thread}>
+//             {activeMessages.map(msg => (
+//                 <div key={msg.id} style={{display: 'flex', flexDirection: 'column', alignItems: msg.senderUsername === user?.username ? 'flex-end' : 'flex-start'}}>
+//                     {msg.senderUsername !== user?.username && <span style={{fontSize: '10px', opacity: 0.5, marginLeft: '10px', marginBottom: '2px'}}>{msg.senderUsername}</span>}
+//                     <div style={styles.bubble(msg.senderUsername === user?.username)}>{msg.content}</div>
+//                 </div>
+//             ))}
+//             <div ref={endRef} />
+//           </div>
+
+//           <div style={styles.inputWrap}>
+//             <input 
+//                 style={{flex: 1, padding: '12px 20px', borderRadius: '999px', border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(255,255,255,0.5)', outline: 'none'}}
+//                 placeholder="Type a message..." value={draft} onChange={(e) => setDraft(e.target.value)} 
+//                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+//             />
+//             <button style={{padding: '10px 24px', borderRadius: '999px', border: 'none', backgroundColor: '#007AFF', color: 'white', fontWeight: '600', cursor: 'pointer'}} onClick={handleSend}>Send</button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -1371,7 +1775,6 @@ export default function Chat() {
   const [loadingDmMessages, setLoadingDmMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [socketReady, setSocketReady] = useState(false);
-  const [activeProfileCardId, setActiveProfileCardId] = useState('');
   const [showTeamMembersCard, setShowTeamMembersCard] = useState(false);
   const [unreadTeamById, setUnreadTeamById] = useState({});
   const [unreadDmByUser, setUnreadDmByUser] = useState({});
@@ -1385,9 +1788,8 @@ export default function Chat() {
   const unreadTeamRef = useRef({});
   const unreadDmRef = useRef({});
 
-  // --- LOGIC METHODS PRESERVED ---
-  const selectedTeam = useMemo(() => teams.find(team => team.id === selectedTeamId) || null, [teams, selectedTeamId]);
-  
+  // --- LOGIC PRESERVED ---
+  const selectedTeam = useMemo(() => teams.find(t => t.id === selectedTeamId) || null, [teams, selectedTeamId]);
   const selectedTeamMembers = useMemo(() => {
     if (!selectedTeam) return [];
     const owner = selectedTeam.username ? [selectedTeam.username] : [];
@@ -1396,136 +1798,62 @@ export default function Chat() {
   }, [selectedTeam]);
 
   const unreadStorageKey = user?.username ? `teamFinderUnread_${user.username}` : null;
-  const totalTeamUnread = Object.values(unreadTeamById).reduce((sum, count) => sum + count, 0);
-  const totalDmUnread = Object.values(unreadDmByUser).reduce((sum, count) => sum + count, 0);
 
-  const getInitials = (name) => {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+  const getInitials = (n) => {
+    if (!n) return '?';
+    const p = n.trim().split(/\s+/);
+    return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
   };
 
-  const avatarPalette = ['#007AFF', '#FF9500', '#5856D6', '#FF2D55', '#34C759'];
   const avatarColor = (name) => {
+    const palette = ['#007AFF', '#FF9500', '#5856D6', '#FF2D55', '#34C759'];
     let hash = 0;
-    const value = name || '';
-    for (let i = 0; i < value.length; i += 1) hash = value.charCodeAt(i) + ((hash << 5) - hash);
-    return avatarPalette[Math.abs(hash) % avatarPalette.length];
+    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return palette[Math.abs(hash) % palette.length];
   };
 
-  const formatTime = (value) => {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
+  // --- FETCHING LOGIC ---
   const fetchMyTeams = async () => {
     try {
       setLoadingTeams(true);
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to load teams');
-      const data = await response.json();
+      const res = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
       setTeams(data);
       if (data.length > 0 && !selectedTeamId) setSelectedTeamId(data[0].id);
-    } catch (err) { setError('Could not load your teams.'); } finally { setLoadingTeams(false); }
+    } catch (e) { setError('Failed to load teams'); } finally { setLoadingTeams(false); }
   };
 
-  const fetchMessages = async (teamId) => {
-    if (!teamId) return;
+  const fetchMessages = async (id) => {
+    if (!id) return;
     try {
       setLoadingMessages(true);
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to load messages');
-      const data = await response.json();
-      setMessages(data);
-    } catch (err) { setError('Could not load team chat messages.'); } finally { setLoadingMessages(false); }
+      const res = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${id}/messages`, { headers: { Authorization: `Bearer ${token}` } });
+      setMessages(await res.json());
+    } catch (e) { setError('Failed to load messages'); } finally { setLoadingMessages(false); }
   };
 
   const fetchDmConversations = async () => {
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to load direct conversations');
-      const data = await response.json();
-      setDmConversations(data);
-    } catch (err) { setError('Could not load direct conversations.'); }
+      const res = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', { headers: { Authorization: `Bearer ${token}` } });
+      setDmConversations(await res.json());
+    } catch (e) { }
   };
 
-  const fetchDmMessages = async (otherUsername) => {
-    if (!otherUsername) return;
+  const fetchDmMessages = async (user) => {
+    if (!user) return;
     try {
       setLoadingDmMessages(true);
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to load direct messages');
-      const data = await response.json();
-      setDmMessages(data);
-    } catch (err) { setError('Could not load direct messages.'); } finally { setLoadingDmMessages(false); }
+      const res = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(user)}/messages`, { headers: { Authorization: `Bearer ${token}` } });
+      setDmMessages(await res.json());
+    } catch (e) { } finally { setLoadingDmMessages(false); }
   };
 
-  const upsertConversation = (otherUsername, lastContent, lastTimestamp) => {
-    setDmConversations(prev => {
-      const existing = prev.find(item => item.otherUsername === otherUsername);
-      if (existing) return [{ ...existing, lastContent, lastTimestamp }, ...prev.filter(item => item.otherUsername !== otherUsername)];
-      return [{ otherUsername, lastContent, lastTimestamp }, ...prev];
-    });
-  };
-
-  const startPrivateChat = (username) => {
-    if (!username || username === user?.username) return;
+  const startPrivateChat = (targetUser) => {
+    if (!targetUser || targetUser === user?.username) return;
     setViewMode('direct');
-    setSelectedDmUser(username);
-    fetchDmMessages(username);
-    if (!dmConversations.some(conv => conv.otherUsername === username)) upsertConversation(username, '', new Date().toISOString());
-  };
-
-  const subscribeTeam = (teamId) => {
-    const socket = socketRef.current;
-    if (!teamId || !socket || socket.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify({ type: 'subscribe', teamId }));
-  };
-
-  const subscribePrivate = (otherUsername) => {
-    const socket = socketRef.current;
-    if (!otherUsername || !socket || socket.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify({ type: 'private_subscribe', otherUsername }));
-  };
-
-  const persistUnreadState = (teamMap, dmMap) => {
-    if (!unreadStorageKey) return;
-    const payload = { team: teamMap, dm: dmMap };
-    localStorage.setItem(unreadStorageKey, JSON.stringify(payload));
-    window.dispatchEvent(new Event('teamfinder-unread-updated'));
-  };
-
-  const markTeamAsRead = (teamId) => {
-    if (!teamId) return;
-    setUnreadTeamById(prev => {
-      if (!prev[teamId]) return prev;
-      const next = { ...prev }; delete next[teamId];
-      unreadTeamRef.current = next;
-      persistUnreadState(next, unreadDmRef.current);
-      return next;
-    });
-  };
-
-  const markDmAsRead = (otherUsername) => {
-    if (!otherUsername) return;
-    setUnreadDmByUser(prev => {
-      if (!prev[otherUsername]) return prev;
-      const next = { ...prev }; delete next[otherUsername];
-      unreadDmRef.current = next;
-      persistUnreadState(unreadTeamRef.current, next);
-      return next;
-    });
+    setSelectedDmUser(targetUser);
+    fetchDmMessages(targetUser);
+    setShowTeamMembersCard(false);
   };
 
   const handleSend = async () => {
@@ -1539,212 +1867,145 @@ export default function Chat() {
         if (!selectedTeamId) return;
         if (useSocket) socket.send(JSON.stringify({ type: 'message', teamId: selectedTeamId, content }));
         else {
-          const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          const res = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
+            method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ content })
           });
-          if (!response.ok) throw new Error('Failed to send');
-          const newMessage = await response.json();
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, await res.json()]);
         }
       } else {
         if (!selectedDmUser) return;
         if (useSocket) socket.send(JSON.stringify({ type: 'private_message', toUsername: selectedDmUser, content }));
         else {
-          const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          const res = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
+            method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ content })
           });
-          if (!response.ok) throw new Error('Failed to send');
-          const newMessage = await response.json();
-          setDmMessages(prev => [...prev, newMessage]);
-          upsertConversation(selectedDmUser, newMessage.content, newMessage.timestamp);
+          setDmMessages(prev => [...prev, await res.json()]);
         }
       }
-      setDraft(''); setError('');
-    } catch (err) { setError('Could not send message.'); } finally { setSending(false); }
+      setDraft('');
+    } catch (e) { setError('Send failed'); } finally { setSending(false); }
   };
 
-  // --- USE EFFECTS ---
-  useEffect(() => { if (!token) return; fetchMyTeams(); fetchDmConversations(); }, [token]);
-  useEffect(() => { if (!unreadStorageKey) return; try { const raw = localStorage.getItem(unreadStorageKey); if (!raw) return; const parsed = JSON.parse(raw); setUnreadTeamById(parsed?.team || {}); setUnreadDmByUser(parsed?.dm || {}); } catch (e) { setUnreadTeamById({}); setUnreadDmByUser({}); } }, [unreadStorageKey]);
-  useEffect(() => { if (teams.length === 0) { setSelectedTeamId(''); return; } const exists = teams.some(team => team.id === selectedTeamId); if (!exists) setSelectedTeamId(teams[0].id); }, [teams, selectedTeamId]);
-  useEffect(() => { selectedTeamRef.current = selectedTeamId; }, [selectedTeamId]);
-  useEffect(() => { selectedDmRef.current = selectedDmUser; }, [selectedDmUser]);
-  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
-  useEffect(() => { unreadTeamRef.current = unreadTeamById; }, [unreadTeamById]);
-  useEffect(() => { unreadDmRef.current = unreadDmByUser; }, [unreadDmByUser]);
-  useEffect(() => { if (!token || !selectedTeamId) return; fetchMessages(selectedTeamId); markTeamAsRead(selectedTeamId); setShowTeamMembersCard(false); }, [token, selectedTeamId]);
-  useEffect(() => { if (!token || !selectedDmUser) return; fetchDmMessages(selectedDmUser); markDmAsRead(selectedDmUser); }, [token, selectedDmUser]);
-  useEffect(() => { if (viewMode !== 'team') setShowTeamMembersCard(false); }, [viewMode]);
+  // --- REFS & EFFECTS ---
+  useEffect(() => { if (token) { fetchMyTeams(); fetchDmConversations(); } }, [token]);
+  useEffect(() => { selectedTeamRef.current = selectedTeamId; selectedDmRef.current = selectedDmUser; viewModeRef.current = viewMode; }, [selectedTeamId, selectedDmUser, viewMode]);
+  useEffect(() => { if (token && selectedTeamId) fetchMessages(selectedTeamId); }, [token, selectedTeamId]);
+  useEffect(() => { if (token && selectedDmUser) fetchDmMessages(selectedDmUser); }, [token, selectedDmUser]);
 
   useEffect(() => {
     if (!token) return;
-    // Updated to point to your space
-    const wsUrl = `wss://garvsharma9-teamfinder-api.hf.space/ws-chat?token=${encodeURIComponent(token)}`;
-    const socket = new WebSocket(wsUrl);
+    const socket = new WebSocket(`wss://garvsharma9-teamfinder-api.hf.space/ws-chat?token=${encodeURIComponent(token)}`);
     socketRef.current = socket;
-    socket.onopen = () => { setSocketReady(true); if (selectedTeamRef.current) subscribeTeam(selectedTeamRef.current); if (selectedDmRef.current) subscribePrivate(selectedDmRef.current); };
-    socket.onmessage = event => {
-        try {
-            const payload = JSON.parse(event.data);
-            if (payload.type === 'message' && payload.message) {
-                const incomingTeamId = payload.teamId;
-                if (incomingTeamId === selectedTeamRef.current) {
-                    setMessages(prev => { const exists = prev.some(item => item.id === payload.message.id); return exists ? prev : [...prev, payload.message]; });
-                }
-                if (!(viewModeRef.current === 'team' && incomingTeamId === selectedTeamRef.current)) {
-                    setUnreadTeamById(prev => { const next = { ...prev, [incomingTeamId]: (prev[incomingTeamId] || 0) + 1 }; unreadTeamRef.current = next; persistUnreadState(next, unreadDmRef.current); return next; });
-                }
-            } else if (payload.type === 'private_message' && payload.message) {
-                const incoming = payload.message;
-                const isCurrentThread = incoming.senderUsername === selectedDmRef.current || incoming.receiverUsername === selectedDmRef.current;
-                if (isCurrentThread) {
-                    setDmMessages(prev => { const exists = prev.some(item => item.id === incoming.id); return exists ? prev : [...prev, incoming]; });
-                }
-                const otherUsername = incoming.senderUsername === user?.username ? incoming.receiverUsername : incoming.senderUsername;
-                upsertConversation(otherUsername, incoming.content, incoming.timestamp);
-                if (!(viewModeRef.current === 'direct' && selectedDmRef.current === otherUsername)) {
-                    setUnreadDmByUser(prev => { const next = { ...prev, [otherUsername]: (prev[otherUsername] || 0) + 1 }; unreadDmRef.current = next; persistUnreadState(unreadTeamRef.current, next); return next; });
-                }
-            }
-        } catch (e) { setError('Invalid payload'); }
+    socket.onopen = () => setSocketReady(true);
+    socket.onmessage = (e) => {
+      const payload = JSON.parse(e.data);
+      if (payload.type === 'message' && payload.teamId === selectedTeamRef.current) setMessages(prev => [...prev, payload.message]);
+      if (payload.type === 'private_message') {
+        const other = payload.message.senderUsername === user?.username ? payload.message.receiverUsername : payload.message.senderUsername;
+        if (other === selectedDmRef.current) setDmMessages(prev => [...prev, payload.message]);
+      }
     };
-    socket.onclose = () => setSocketReady(false);
-    return () => { setSocketReady(false); socket.close(); };
-  }, [token, user?.username]);
+    return () => socket.close();
+  }, [token]);
 
-  useEffect(() => { subscribeTeam(selectedTeamId); }, [selectedTeamId, socketReady]);
-  useEffect(() => { subscribePrivate(selectedDmUser); }, [selectedDmUser, socketReady]);
-  useEffect(() => { if (!socketReady) return; teams.forEach(team => subscribeTeam(team.id)); }, [teams, socketReady]);
-  useEffect(() => { if (!socketReady) return; dmConversations.forEach(conv => subscribePrivate(conv.otherUsername)); }, [dmConversations, socketReady]);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, dmMessages, viewMode]);
-  
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-        const target = event.target;
-        if (target.closest('[data-profile-card="true"]') || target.closest('[data-profile-trigger="true"]') || target.closest('[data-team-members-card="true"]') || target.closest('[data-team-members-trigger="true"]')) return;
-        setActiveProfileCardId(''); setShowTeamMembersCard(false);
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
-
-  const activeMessages = viewMode === 'team' ? messages : dmMessages;
-  const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, dmMessages]);
 
   // --- STYLING ---
   const glassStyle = {
     background: 'rgba(255, 255, 255, 0.7)',
     backdropFilter: 'blur(20px)',
     border: '1px solid rgba(255, 255, 255, 0.4)',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
   };
 
   const styles = {
-    shell: { maxWidth: '1240px', margin: '0 auto', padding: '20px', fontFamily: '-apple-system, sans-serif' },
-    frame: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', height: '85vh' },
-    card: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
-    chatCard: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'grid', gridTemplateRows: '80px 1fr 80px' },
-    sideHeader: { padding: '20px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-    toggleWrap: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
-    toggleBtn: (active) => ({
-      padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-      backgroundColor: active ? '#007AFF' : 'rgba(0,0,0,0.05)',
-      color: active ? '#fff' : '#555', fontWeight: '600', fontSize: '13px'
-    }),
-    sideScroll: { flex: 1, overflowY: 'auto', padding: '10px' },
-    sideItem: (isActive) => ({
-      display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', cursor: 'pointer',
-      backgroundColor: isActive ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
-      transition: 'all 0.2s'
-    }),
-    avatar: (name) => ({
-      width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      backgroundColor: avatarColor(name), color: '#fff', fontWeight: 'bold', fontSize: '14px'
-    }),
-    chatTop: { padding: '0 25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-    thread: { overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column' },
-    bubble: (mine) => ({
-      padding: '12px 18px', maxWidth: '70%', borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-      backgroundColor: mine ? '#007AFF' : 'white',
-      color: mine ? '#fff' : '#000', marginBottom: '10px', alignSelf: mine ? 'flex-end' : 'flex-start',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-    }),
-    inputWrap: { padding: '15px 25px', display: 'flex', gap: '10px', alignItems: 'center' },
+    shell: { maxWidth: '1200px', margin: '0 auto', padding: '20px', height: '90vh', fontFamily: '-apple-system, sans-serif' },
+    frame: { display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', height: '100%' },
+    panel: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
+    header: { padding: '20px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' },
+    scroll: { flex: 1, overflowY: 'auto', padding: '15px' },
+    item: (active) => ({ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', cursor: 'pointer', backgroundColor: active ? 'rgba(0,122,255,0.1)' : 'transparent', marginBottom: '8px' }),
+    bubble: (mine) => ({ padding: '12px 18px', maxWidth: '75%', borderRadius: mine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', backgroundColor: mine ? '#007AFF' : 'white', color: mine ? 'white' : 'black', marginBottom: '12px', alignSelf: mine ? 'flex-end' : 'flex-start', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }),
+    inputArea: { padding: '20px', display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.3)' },
+    dropdown: { position: 'absolute', top: '75px', left: '20px', width: '280px', background: 'white', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', zIndex: 100, padding: '10px', border: '1px solid #eee' }
   };
-
-  if (loadingTeams) return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading chat...</div>;
 
   return (
     <div style={styles.shell}>
       <div style={styles.frame}>
-        <div style={styles.card}>
-          <div style={styles.sideHeader}>
-            <div style={styles.toggleWrap}>
-              <button style={styles.toggleBtn(viewMode === 'team')} onClick={() => setViewMode('team')}>Team</button>
-              <button style={styles.toggleBtn(viewMode === 'direct')} onClick={() => setViewMode('direct')}>Direct</button>
+        {/* SIDEBAR */}
+        <div style={styles.panel}>
+          <div style={styles.header}>
+            <div style={{ display: 'flex', width: '100%', gap: '5px' }}>
+              <button style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '12px', background: viewMode === 'team' ? '#007AFF' : 'rgba(0,0,0,0.05)', color: viewMode === 'team' ? 'white' : '#555', fontWeight: 'bold' }} onClick={() => setViewMode('team')}>Team</button>
+              <button style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '12px', background: viewMode === 'direct' ? '#007AFF' : 'rgba(0,0,0,0.05)', color: viewMode === 'direct' ? 'white' : '#555', fontWeight: 'bold' }} onClick={() => setViewMode('direct')}>Direct</button>
             </div>
           </div>
-          <div style={styles.sideScroll}>
-            {viewMode === 'team' ? 
-                teams.map(team => (
-                    <div key={team.id} style={styles.sideItem(team.id === selectedTeamId)} onClick={() => setSelectedTeamId(team.id)}>
-                        <div style={styles.avatar(team.teamName)}>{getInitials(team.teamName)}</div>
-                        <div><div style={{fontWeight: '600'}}>{team.teamName}</div><div style={{fontSize: '12px', opacity: 0.6}}>{team.competitionName}</div></div>
-                    </div>
-                ))
-            : 
-                dmConversations.map(conv => (
-                    <div key={conv.otherUsername} style={styles.sideItem(conv.otherUsername === selectedDmUser)} onClick={() => setSelectedDmUser(conv.otherUsername)}>
-                        <div style={styles.avatar(conv.otherUsername)}>{getInitials(conv.otherUsername)}</div>
-                        <div style={{fontWeight: '600'}}>{conv.otherUsername}</div>
-                    </div>
-                ))
-            }
+          <div style={styles.scroll}>
+            {viewMode === 'team' ? teams.map(t => (
+              <div key={t.id} style={styles.item(t.id === selectedTeamId)} onClick={() => setSelectedTeamId(t.id)}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: avatarColor(t.teamName), color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{getInitials(t.teamName)}</div>
+                <div style={{ overflow: 'hidden' }}><div style={{ fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{t.teamName}</div><div style={{ fontSize: '11px', opacity: 0.6 }}>{t.competitionName}</div></div>
+              </div>
+            )) : dmConversations.map(c => (
+              <div key={c.otherUsername} style={styles.item(c.otherUsername === selectedDmUser)} onClick={() => setSelectedDmUser(c.otherUsername)}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: avatarColor(c.otherUsername), color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{getInitials(c.otherUsername)}</div>
+                <div style={{ fontWeight: 'bold' }}>{c.otherUsername}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div style={styles.chatCard}>
-          <div style={styles.chatTop}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                <div style={styles.avatar(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}>
-                    {getInitials(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}
+        {/* CHAT AREA */}
+        <div style={styles.panel}>
+          <div style={{ ...styles.header, cursor: viewMode === 'team' ? 'pointer' : 'default' }} onClick={() => viewMode === 'team' && setShowTeamMembersCard(!showTeamMembersCard)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#007AFF', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                {getInitials(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold', fontSize: '18px' }}>
+                  {viewMode === 'team' ? (selectedTeam?.teamName || 'Select Team') : (selectedDmUser || 'Select DM')}
+                  {viewMode === 'team' && selectedTeam && <span style={{ fontSize: '12px', marginLeft: '8px', opacity: 0.4 }}>▾</span>}
                 </div>
-                <div>
-                    {/* FIXED: CORRECT NAME DISPLAY IN HEADER */}
-                    <div style={{fontWeight: '700', fontSize: '18px'}}>
-                        {viewMode === 'team' ? (selectedTeam?.teamName || 'Select a Team') : (selectedDmUser || 'Select a Chat')}
-                    </div>
-                    <div style={{fontSize: '12px', color: '#86868b'}}>
-                        {viewMode === 'team' ? selectedTeam?.competitionName : 'Private Message'}
-                    </div>
-                </div>
-            </div>
-            <div style={{color: socketReady ? '#34C759' : '#FF9500', fontSize: '12px', fontWeight: 'bold'}}>
-                {socketReady ? '● Live connected' : '● Reconnecting...'}
+                <div style={{ fontSize: '12px', color: socketReady ? '#34C759' : '#FF9500' }}>● {socketReady ? 'Live connected' : 'Connecting...'}</div>
+              </div>
             </div>
           </div>
 
-          <div style={styles.thread}>
-            {activeMessages.map(msg => (
-                <div key={msg.id} style={{display: 'flex', flexDirection: 'column', alignItems: msg.senderUsername === user?.username ? 'flex-end' : 'flex-start'}}>
-                    {msg.senderUsername !== user?.username && <span style={{fontSize: '10px', opacity: 0.5, marginLeft: '10px', marginBottom: '2px'}}>{msg.senderUsername}</span>}
-                    <div style={styles.bubble(msg.senderUsername === user?.username)}>{msg.content}</div>
+          {/* TEAM MEMBERS DROPDOWN */}
+          {showTeamMembersCard && viewMode === 'team' && (
+            <div style={styles.dropdown}>
+              <div style={{ padding: '8px', fontWeight: 'bold', fontSize: '13px', color: '#888' }}>Team Members</div>
+              {selectedTeamMembers.map(m => (
+                <div key={m} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{m} {m === user?.username && '(You)'}</span>
+                  {m !== user?.username && (
+                    <button onClick={() => startPrivateChat(m)} style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid #007AFF', color: '#007AFF', background: 'none', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Message</button>
+                  )}
                 </div>
-            ))}
+              ))}
+            </div>
+          )}
+
+          <div style={{ ...styles.scroll, display: 'flex', flexDirection: 'column' }}>
+            {(viewMode === 'team' ? messages : dmMessages).map((m, i) => {
+              const mine = m.senderUsername === user?.username;
+              return (
+                <div key={i} style={styles.bubble(mine)}>
+                  {!mine && viewMode === 'team' && <div style={{ fontSize: '10px', fontWeight: 'bold', marginBottom: '4px', opacity: 0.5 }}>{m.senderUsername}</div>}
+                  <div>{m.content}</div>
+                </div>
+              );
+            })}
             <div ref={endRef} />
           </div>
 
-          <div style={styles.inputWrap}>
-            <input 
-                style={{flex: 1, padding: '12px 20px', borderRadius: '999px', border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(255,255,255,0.5)', outline: 'none'}}
-                placeholder="Type a message..." value={draft} onChange={(e) => setDraft(e.target.value)} 
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            />
-            <button style={{padding: '10px 24px', borderRadius: '999px', border: 'none', backgroundColor: '#007AFF', color: 'white', fontWeight: '600', cursor: 'pointer'}} onClick={handleSend}>Send</button>
+          <div style={styles.inputArea}>
+            <input style={{ flex: 1, padding: '12px 20px', borderRadius: '999px', border: '1px solid rgba(0,0,0,0.1)', background: 'white', outline: 'none' }} placeholder="Message..." value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} />
+            <button onClick={handleSend} style={{ width: '45px', height: '45px', borderRadius: '50%', border: 'none', background: '#007AFF', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>↑</button>
           </div>
         </div>
       </div>
