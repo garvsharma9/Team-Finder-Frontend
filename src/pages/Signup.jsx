@@ -30,7 +30,7 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/public/otp/send', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email })
@@ -58,7 +58,7 @@ export default function Signup() {
 
     try {
       // 1. Verify the OTP first
-      const otpResponse = await fetch('http://localhost:8080/public/otp/verify', {
+      const otpResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp: otp })
@@ -83,7 +83,7 @@ export default function Signup() {
         skill: skillArray
       };
 
-      const signupResponse = await fetch('http://localhost:8080/public/signup', {
+      const signupResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

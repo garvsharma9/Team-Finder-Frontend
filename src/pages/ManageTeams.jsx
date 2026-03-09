@@ -9,7 +9,7 @@ export default function ManageTeams() {
 
   const fetchMyPosts = async () => {
     try {
-      const response = await fetch('http://localhost:8080/post/all', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch posts');
@@ -36,7 +36,7 @@ export default function ManageTeams() {
 
   const handleAccept = async (postId, targetUsername) => {
     try {
-      const response = await fetch(`http://localhost:8080/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -62,7 +62,7 @@ export default function ManageTeams() {
     if (!window.confirm(`Are you sure you want to reject ${targetUsername}?`)) return;
     
     try {
-      const response = await fetch(`http://localhost:8080/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

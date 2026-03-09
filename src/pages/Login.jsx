@@ -26,7 +26,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/public/signin', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }) 
@@ -59,7 +59,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/public/verify-login', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/verify-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username, otp: otp }) 

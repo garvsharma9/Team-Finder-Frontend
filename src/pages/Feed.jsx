@@ -21,7 +21,7 @@ export default function Feed() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('http://localhost:8080/post/all', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch posts');
@@ -45,7 +45,7 @@ export default function Feed() {
     const postPayload = { ...formData, username: user.username };
 
     try {
-      const response = await fetch('http://localhost:8080/post/add-post', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/add-post', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export default function Feed() {
 
   const handleRequestJoin = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:8080/post/${postId}/request?requesterUsername=${user.username}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

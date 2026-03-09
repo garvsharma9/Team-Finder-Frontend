@@ -70,7 +70,7 @@ export default function Chat() {
   const fetchMyTeams = async () => {
     try {
       setLoadingTeams(true);
-      const response = await fetch('http://localhost:8080/chat/my-teams', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load teams');
@@ -90,7 +90,7 @@ export default function Chat() {
     if (!teamId) return;
     try {
       setLoadingMessages(true);
-      const response = await fetch(`http://localhost:8080/chat/${teamId}/messages`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load messages');
@@ -106,7 +106,7 @@ export default function Chat() {
 
   const fetchDmConversations = async () => {
     try {
-      const response = await fetch('http://localhost:8080/chat/private/conversations', {
+      const response = await fetch('hhttps://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load direct conversations');
@@ -121,7 +121,7 @@ export default function Chat() {
     if (!otherUsername) return;
     try {
       setLoadingDmMessages(true);
-      const response = await fetch(`http://localhost:8080/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load direct messages');
@@ -215,7 +215,7 @@ export default function Chat() {
         if (useSocket) {
           socket.send(JSON.stringify({ type: 'message', teamId: selectedTeamId, content }));
         } else {
-          const response = await fetch(`http://localhost:8080/chat/${selectedTeamId}/messages`, {
+          const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -232,7 +232,7 @@ export default function Chat() {
         if (useSocket) {
           socket.send(JSON.stringify({ type: 'private_message', toUsername: selectedDmUser, content }));
         } else {
-          const response = await fetch(`http://localhost:8080/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
+          const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,

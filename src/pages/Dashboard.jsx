@@ -16,7 +16,7 @@ export default function Dashboard() {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export default function Dashboard() {
       const currentSkills = user.skill || [];
       const updatedSkills = [...currentSkills, newSkill.trim()];
       
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ ...user, skill: updatedSkills })
@@ -67,7 +67,7 @@ export default function Dashboard() {
   const handleRemoveSkill = async (skillToRemove) => {
     const updatedSkills = (user.skill || []).filter(s => s !== skillToRemove);
     try {
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ ...user, skill: updatedSkills })
