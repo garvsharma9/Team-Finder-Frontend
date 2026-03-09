@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/Authcontext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Dashboard() {
   const { user, token, updateUser } = useContext(AuthContext);

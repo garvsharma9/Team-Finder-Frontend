@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
-import { AuthProvider } from './context/Authcontext';
+import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Search from './pages/Search';
 import Feed from './pages/Feed';
