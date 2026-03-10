@@ -283,12 +283,12 @@ const steps = [
   { num: "04", title: "Build & Compete", desc: "Chat in real-time, coordinate efforts, and dominate campus events together." },
 ];
 
-const stats = [
-  { value: "10K+", label: "Active Students" },
-  { value: "2.5K+", label: "Teams Formed" },
-  { value: "500+", label: "Events Hosted" },
-  { value: "50+", label: "Campuses" },
-];
+// const stats = [
+//   { value: "10K+", label: "Active Students" },
+//   { value: "2.5K+", label: "Teams Formed" },
+//   { value: "500+", label: "Events Hosted" },
+//   { value: "50+", label: "Campuses" },
+// ];
 
 const feedPosts = [
   { title: "AI Chatbot for Campus", skills: ["Python", "NLP", "React"], spots: 2, event: "TechHack 2026" },
@@ -332,7 +332,7 @@ export default function Index() {
       {/* ===== NAVBAR ===== */}
       {/* <nav className="tf-glass fixed top-0 left-0 right-0 z-50 border-b border-white/10"> */}
 
-      
+
       {/* ===== NAVBAR ===== */}
       <nav className={`tf-glass fixed top-0 right-0 z-50 border-b border-white/10 transition-all duration-400 ease-in-out ${
         isSidebarCollapsed ? 'left-[100px]' : 'left-[280px]'
@@ -400,14 +400,14 @@ export default function Index() {
               </Link>
             </motion.div>
 
-            <motion.div custom={4} variants={fadeUp} className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {/* <motion.div custom={4} variants={fadeUp} className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {stats.map((s) => (
                 <div key={s.label} className="text-center lg:text-left">
                   <div className="tf-display text-2xl font-bold text-white sm:text-3xl">{s.value}</div>
                   <div className="text-xs text-white/50 sm:text-sm">{s.label}</div>
                 </div>
               ))}
-            </motion.div>
+            </motion.div> */}
           </motion.div>
 
           {/* Right — floating 3D illustration */}
