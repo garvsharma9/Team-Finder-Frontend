@@ -146,6 +146,8 @@ import {
   GraduationCap, Shield, ArrowRight, Sparkles, Zap,
   Heart, TrendingUp, Globe, ChevronRight
 } from 'lucide-react';
+import heroImage from '../assets/hero-shapes.png'; 
+// (Adjust the '../' path depending on where Home.jsx is located relative to assets)
 
 // ─── All custom CSS injected inline ───
 const styleSheet = `
@@ -426,7 +428,7 @@ export default function Index() {
                 
                 {/* Your new image file */}
                 <img 
-                  src="/hero-shapes.png" 
+                  src={heroImage}
                   alt="TeamFinder Abstract Shapes" 
                   className="w-full h-full object-contain drop-shadow-2xl"
                 />
