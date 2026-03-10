@@ -546,10 +546,11 @@ export default function Sidebar() {
 
   // Dispatch custom event so Home.js knows to stretch the header
   const toggleSidebar = () => {
-    const nextState = !isCollapsed;
-    setIsCollapsed(nextState);
-    window.dispatchEvent(new Event('sidebar-toggle'));
-  };
+    const nextState = !isCollapsed;
+    setIsCollapsed(nextState);
+    // Send the state so the Navbar knows exactly what to do!
+    window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: nextState }));
+  };
 
   useEffect(() => {
     if (!user?.username) {
