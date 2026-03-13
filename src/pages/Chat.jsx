@@ -1361,7 +1361,7 @@ export default function Chat() {
   useEffect(() => {
     if (!token) return;
 
-    const wsUrl = `ws://localhost:8080/ws-chat?token=${encodeURIComponent(token)}`;
+    const wsUrl = `wss://garvsharma9-teamfinder-api.hf.space/ws-chat?token=${encodeURIComponent(token)}`;
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
