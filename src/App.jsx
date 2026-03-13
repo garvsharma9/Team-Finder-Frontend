@@ -13,6 +13,7 @@ import ManageTeams from './pages/ManageTeams';
 import PublicProfile from './pages/PublicProfile';
 import Sidebar from './components/Sidebar';
 import Chat from './pages/Chat';
+import Network from './pages/Network';
 import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
                 <Route path="/manage-teams" element={<ProtectedRoute><ManageTeams /></ProtectedRoute>} />
                 <Route path="/profile/:username" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
+                <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
               </Routes>
             </div>
           </div>

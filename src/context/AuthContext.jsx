@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -9,12 +9,11 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // NEW: Initialize token from localStorage
+  // Initialize token from localStorage
   const [token, setToken] = useState(() => {
     return localStorage.getItem('teamFinderToken') || null;
   });
 
-  // NEW: Accept both userData and jwtToken
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
@@ -22,8 +21,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('teamFinderToken', jwtToken); 
   };
 
-  // NEW: Clear both user and token on logout
   const logout = () => {
+    if (token) {
+      fetch('http://localhost:8080/user/status?online=false', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
     setUser(null);
     setToken(null);
     localStorage.removeItem('teamFinderUser');
@@ -39,8 +43,61 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // --- EFFECT 1: PRESENCE TRACKER (Online/Offline) ---
+  useEffect(() => {
+    if (!token) return;
+
+    // Set Online
+    fetch('http://localhost:8080/user/status?online=true', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const handleUnload = () => {
+      fetch('http://localhost:8080/user/status?online=false', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        keepalive: true 
+      });
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      handleUnload(); 
+    };
+  }, [token]);
+
+  // --- EFFECT 2: SILENT PROFILE SYNC (Sync with DB) ---
+  // Merged your two sync functions into one efficient call
+  useEffect(() => {
+    const syncProfile = async () => {
+      if (!token || !user?.username) return;
+
+      try {
+        const response = await fetch(`http://localhost:8080/home/search-by-username/${user.username}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const freshData = await response.json();
+          
+          // Only update state if the data has actually changed (prevents infinite loops)
+          if (JSON.stringify(freshData) !== JSON.stringify(user)) {
+            updateUser(freshData);
+            console.log("Profile synced with database.");
+          }
+        }
+      } catch (err) {
+        console.error("Auto-sync failed:", err);
+      }
+    };
+
+    syncProfile();
+  }, [token, user?.username]); 
+
   return (
-    // Expose the token to the rest of the app!
     <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
