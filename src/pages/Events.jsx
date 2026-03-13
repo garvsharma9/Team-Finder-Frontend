@@ -274,7 +274,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 export default function Events() {
   const { user, token } = useContext(AuthContext);
   
@@ -342,7 +342,7 @@ export default function Events() {
   const handleDeleteEvent = async (eventId) => {
     if (!window.confirm("Are you sure you want to delete this official event?")) return;
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space0/events/delete/${eventId}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -363,6 +363,72 @@ export default function Events() {
       month: dateObj.toLocaleString('default', { month: 'short' }).toUpperCase(),
       day: dateObj.getDate()
     };
+  };
+
+ const handleLikeEvent = async (eventId) => {
+    if (!user) return; // Safety check
+    
+    // 1. Instant UI Update
+    setEvents(prevEvents => prevEvents.map(evt => {
+      if (evt.id === eventId) {
+        // CHANGED: evt.likes to evt.like
+        const hasLiked = evt.like?.includes(user.username);
+        let newLike = evt.like || [];
+        let newDislike = evt.dislike || [];
+
+        if (hasLiked) {
+          newLike = newLike.filter(name => name !== user.username);
+        } else {
+          newLike = [...newLike, user.username];
+          newDislike = newDislike.filter(name => name !== user.username);
+        }
+        return { ...evt, like: newLike, dislike: newDislike };
+      }
+      return evt;
+    }));
+
+    // 2. Background API Call (Hardcoded URL as requested)
+    try {
+      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/like?username=${user.username}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error("Failed to like event", err);
+    }
+  };
+
+  const handleDislikeEvent = async (eventId) => {
+    if (!user) return; // Safety check
+
+    // 1. Instant UI Update
+    setEvents(prevEvents => prevEvents.map(evt => {
+      if (evt.id === eventId) {
+        // CHANGED: evt.dislikes to evt.dislike
+        const hasDisliked = evt.dislike?.includes(user.username);
+        let newLike = evt.like || [];
+        let newDislike = evt.dislike || [];
+
+        if (hasDisliked) {
+          newDislike = newDislike.filter(name => name !== user.username);
+        } else {
+          newDislike = [...newDislike, user.username];
+          newLike = newLike.filter(name => name !== user.username);
+        }
+        return { ...evt, like: newLike, dislike: newDislike };
+      }
+      return evt;
+    }));
+
+    // 2. Background API Call
+    try {
+      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/dislike?username=${user.username}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error("Failed to dislike event", err);
+    }
   };
 
   // --- REWRITTEN GLASSY UI STYLES ---
@@ -562,6 +628,34 @@ export default function Events() {
                   <p className="event-desc">{event.description}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+                
+                <button 
+                  onClick={() => handleLikeEvent(event.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    event.like?.includes(user?.username) 
+                      ? 'bg-blue-50 text-blue-600' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>{event.like?.length || 0}</span>
+                </button>
+
+                <button 
+                  onClick={() => handleDislikeEvent(event.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    event.dislike?.includes(user?.username) 
+                      ? 'bg-red-50 text-red-600' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span>{event.dislike?.length || 0}</span>
+                </button>
+
+              </div>
+
 
               <div className="event-footer">
                 <span style={{ fontSize: '12px', color: '#86868B', fontWeight: '500' }}>
