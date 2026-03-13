@@ -86,27 +86,48 @@ export default function Chat() {
     }
   };
 
-  const fetchMessages = async (teamId) => {
+  // const fetchMessages = async (teamId) => {
+  //   if (!teamId) return;
+  //   try {
+  //     setLoadingMessages(true);
+  //     const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (!response.ok) throw new Error('Failed to load messages');
+  //     const data = await response.json();
+  //     setMessages(data);
+  //     setError('');
+  //   } catch (err) {
+  //     setError('Could not load team chat messages.');
+  //   } finally {
+  //     setLoadingMessages(false);
+  //   }
+  // };
+
+
+
+  const fetchMessages = async (teamId, isBackground = false) => {
     if (!teamId) return;
     try {
-      setLoadingMessages(true);
+      if (!isBackground) setLoadingMessages(true); // Only show loading spinner on first click
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load messages');
       const data = await response.json();
       setMessages(data);
-      setError('');
+      if (!isBackground) setError('');
     } catch (err) {
-      setError('Could not load team chat messages.');
+      if (!isBackground) setError('Could not load team chat messages.');
     } finally {
-      setLoadingMessages(false);
+      if (!isBackground) setLoadingMessages(false);
     }
   };
 
+
   const fetchDmConversations = async () => {
     try {
-      const response = await fetch('hhttps://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load direct conversations');
@@ -117,10 +138,28 @@ export default function Chat() {
     }
   };
 
-  const fetchDmMessages = async (otherUsername) => {
+  // const fetchDmMessages = async (otherUsername) => {
+  //   if (!otherUsername) return;
+  //   try {
+  //     setLoadingDmMessages(true);
+  //     const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (!response.ok) throw new Error('Failed to load direct messages');
+  //     const data = await response.json();
+  //     setDmMessages(data);
+  //   } catch (err) {
+  //     setError('Could not load direct messages.');
+  //   } finally {
+  //     setLoadingDmMessages(false);
+  //   }
+  // };
+
+
+  const fetchDmMessages = async (otherUsername, isBackground = false) => {
     if (!otherUsername) return;
     try {
-      setLoadingDmMessages(true);
+      if (!isBackground) setLoadingDmMessages(true);
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -128,9 +167,9 @@ export default function Chat() {
       const data = await response.json();
       setDmMessages(data);
     } catch (err) {
-      setError('Could not load direct messages.');
+      if (!isBackground) setError('Could not load direct messages.');
     } finally {
-      setLoadingDmMessages(false);
+      if (!isBackground) setLoadingDmMessages(false);
     }
   };
 
@@ -445,6 +484,25 @@ export default function Chat() {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  // --- NEW AUTO-POLLING LOGIC ---
+  useEffect(() => {
+    if (!token) return;
+
+    // Check for new messages every 3 seconds (3000ms)
+    const intervalId = setInterval(() => {
+      if (viewModeRef.current === 'team' && selectedTeamRef.current) {
+        // The 'true' flag tells it to fetch silently in the background
+        fetchMessages(selectedTeamRef.current, true); 
+      } else if (viewModeRef.current === 'direct' && selectedDmRef.current) {
+        fetchDmMessages(selectedDmRef.current, true);
+      }
+    }, 2000);
+
+    // Clean up the timer if the user leaves the chat page
+    return () => clearInterval(intervalId);
+  }, [token]);
+  // ------------------------------
 
   const activeMessages = viewMode === 'team' ? messages : dmMessages;
   const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
