@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     if (token) {
-      fetch('http://localhost:8080/user/status?online=false', {
+      fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=false', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -48,13 +48,13 @@ export const AuthProvider = ({ children }) => {
     if (!token) return;
 
     // Set Online
-    fetch('http://localhost:8080/user/status?online=true', {
+    fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=true', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     const handleUnload = () => {
-      fetch('http://localhost:8080/user/status?online=false', {
+      fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=false', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         keepalive: true 
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
       if (!token || !user?.username) return;
 
       try {
-        const response = await fetch(`http://localhost:8080/home/search-by-username/${user.username}`, {
+        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${user.username}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
