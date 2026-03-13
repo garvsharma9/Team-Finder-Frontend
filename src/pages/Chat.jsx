@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { themePalette } from '../theme/palette';
 
 export default function Chat() {
   const { user, token } = useContext(AuthContext);
@@ -86,27 +87,48 @@ export default function Chat() {
     }
   };
 
-  const fetchMessages = async (teamId) => {
+  // const fetchMessages = async (teamId) => {
+  //   if (!teamId) return;
+  //   try {
+  //     setLoadingMessages(true);
+  //     const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (!response.ok) throw new Error('Failed to load messages');
+  //     const data = await response.json();
+  //     setMessages(data);
+  //     setError('');
+  //   } catch (err) {
+  //     setError('Could not load team chat messages.');
+  //   } finally {
+  //     setLoadingMessages(false);
+  //   }
+  // };
+
+
+
+  const fetchMessages = async (teamId, isBackground = false) => {
     if (!teamId) return;
     try {
-      setLoadingMessages(true);
+      if (!isBackground) setLoadingMessages(true); // Only show loading spinner on first click
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load messages');
       const data = await response.json();
       setMessages(data);
-      setError('');
+      if (!isBackground) setError('');
     } catch (err) {
-      setError('Could not load team chat messages.');
+      if (!isBackground) setError('Could not load team chat messages.');
     } finally {
-      setLoadingMessages(false);
+      if (!isBackground) setLoadingMessages(false);
     }
   };
 
+
   const fetchDmConversations = async () => {
     try {
-      const response = await fetch('hhttps://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load direct conversations');
@@ -117,10 +139,28 @@ export default function Chat() {
     }
   };
 
-  const fetchDmMessages = async (otherUsername) => {
+  // const fetchDmMessages = async (otherUsername) => {
+  //   if (!otherUsername) return;
+  //   try {
+  //     setLoadingDmMessages(true);
+  //     const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (!response.ok) throw new Error('Failed to load direct messages');
+  //     const data = await response.json();
+  //     setDmMessages(data);
+  //   } catch (err) {
+  //     setError('Could not load direct messages.');
+  //   } finally {
+  //     setLoadingDmMessages(false);
+  //   }
+  // };
+
+
+  const fetchDmMessages = async (otherUsername, isBackground = false) => {
     if (!otherUsername) return;
     try {
-      setLoadingDmMessages(true);
+      if (!isBackground) setLoadingDmMessages(true);
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -128,9 +168,9 @@ export default function Chat() {
       const data = await response.json();
       setDmMessages(data);
     } catch (err) {
-      setError('Could not load direct messages.');
+      if (!isBackground) setError('Could not load direct messages.');
     } finally {
-      setLoadingDmMessages(false);
+      if (!isBackground) setLoadingDmMessages(false);
     }
   };
 
@@ -446,15 +486,36 @@ export default function Chat() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  // --- NEW AUTO-POLLING LOGIC ---
+  useEffect(() => {
+    if (!token) return;
+
+    // Check for new messages every 3 seconds (3000ms)
+    const intervalId = setInterval(() => {
+      if (viewModeRef.current === 'team' && selectedTeamRef.current) {
+        // The 'true' flag tells it to fetch silently in the background
+        fetchMessages(selectedTeamRef.current, true); 
+      } else if (viewModeRef.current === 'direct' && selectedDmRef.current) {
+        fetchDmMessages(selectedDmRef.current, true);
+      }
+    }, 2000);
+
+    // Clean up the timer if the user leaves the chat page
+    return () => clearInterval(intervalId);
+  }, [token]);
+  // ------------------------------
+
   const activeMessages = viewMode === 'team' ? messages : dmMessages;
   const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
+  const colors = themePalette;
 
   const styles = {
     shell: {
       maxWidth: '1240px',
       margin: '18px auto',
       padding: '0 14px',
-      fontFamily: '"Segoe UI", "SF Pro Text", Tahoma, sans-serif'
+      fontFamily: '"Segoe UI", "SF Pro Text", Tahoma, sans-serif',
+      color: colors.textMain
     },
     frame: {
       display: 'grid',
@@ -463,15 +524,15 @@ export default function Chat() {
       height: 'calc(100vh - 52px)'
     },
     card: {
-      background: 'linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%)',
+      background: `linear-gradient(180deg, ${colors.glassStrong} 0%, ${colors.glass} 100%)`,
       borderRadius: '22px',
-      border: '1px solid #e5e7eb',
-      boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)',
+      border: `1px solid ${colors.border}`,
+      boxShadow: colors.shadow,
       overflow: 'hidden'
     },
     sideHeader: {
       padding: '14px',
-      borderBottom: '1px solid #eef2ff'
+      borderBottom: `1px solid ${colors.border}`
     },
     toggleWrap: {
       display: 'grid',
@@ -480,9 +541,9 @@ export default function Chat() {
       marginBottom: '10px'
     },
     toggleBtn: (active) => ({
-      border: active ? '1px solid #c7d2fe' : '1px solid #e5e7eb',
-      background: active ? '#eef2ff' : '#fff',
-      color: active ? '#3730a3' : '#6b7280',
+      border: active ? `1px solid ${colors.borderStrong}` : `1px solid ${colors.border}`,
+      background: active ? colors.primaryGhost : colors.glassStrong,
+      color: active ? colors.blue : colors.textSecondary,
       borderRadius: '999px',
       padding: '8px 10px',
       fontSize: '12px',
@@ -508,8 +569,8 @@ export default function Chat() {
       padding: '10px',
       marginBottom: '8px',
       cursor: 'pointer',
-      backgroundColor: isActive ? '#edf2ff' : '#fff',
-      border: isActive ? '1px solid #c7d2fe' : '1px solid #edf0f7'
+      backgroundColor: isActive ? colors.primaryGhost : colors.glassStrong,
+      border: isActive ? `1px solid ${colors.borderStrong}` : `1px solid ${colors.border}`
     }),
     sideItemMain: {
       minWidth: 0
@@ -528,16 +589,16 @@ export default function Chat() {
       flexShrink: 0
     }),
     chatCard: {
-      background: '#f4f5fb',
+      background: colors.glassSoft,
       borderRadius: '22px',
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${colors.border}`,
       overflow: 'hidden',
       display: 'grid',
       gridTemplateRows: '74px 1fr 72px'
     },
     chatTop: {
-      backgroundColor: '#fff',
-      borderBottom: '1px solid #e9ecf7',
+      backgroundColor: colors.glassStrong,
+      borderBottom: `1px solid ${colors.border}`,
       padding: '14px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -555,13 +616,13 @@ export default function Chat() {
     }),
     status: {
       fontSize: '12px',
-      color: socketReady ? '#059669' : '#6b7280',
+      color: socketReady ? colors.green : colors.textSecondary,
       fontWeight: 600
     },
     thread: {
       overflowY: 'auto',
       padding: '18px 22px',
-      background: 'radial-gradient(circle at top right, #eef2ff 0%, #f4f5fb 48%, #f8fafc 100%)'
+      background: `radial-gradient(circle at top right, rgba(79, 140, 255, 0.14) 0%, ${colors.glassSoft} 48%, ${colors.glass} 100%)`
     },
     row: (mine) => ({
       display: 'flex',
@@ -577,10 +638,10 @@ export default function Chat() {
     bubble: (mine) => ({
       padding: '11px 14px',
       borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
-      background: mine ? 'linear-gradient(135deg, #5b5fef 0%, #6d75f7 100%)' : '#ffffff',
-      color: mine ? '#fff' : '#111827',
-      border: mine ? 'none' : '1px solid #e5e7eb',
-      boxShadow: mine ? '0 6px 18px rgba(91, 95, 239, 0.35)' : '0 4px 12px rgba(17, 24, 39, 0.06)'
+      background: mine ? `linear-gradient(135deg, ${colors.blueStrong} 0%, ${colors.blue} 100%)` : colors.glassStrong,
+      color: mine ? '#fff' : colors.textMain,
+      border: mine ? 'none' : `1px solid ${colors.border}`,
+      boxShadow: mine ? '0 12px 22px rgba(79, 140, 255, 0.26)' : colors.shadow
     }),
     msgName: (mine) => ({
       fontSize: '11px',
@@ -600,10 +661,10 @@ export default function Chat() {
       left: '0',
       transform: 'translateY(-100%)',
       minWidth: '210px',
-      backgroundColor: '#fff',
-      border: '1px solid #dfe6f4',
+      backgroundColor: colors.glassStrong,
+      border: `1px solid ${colors.border}`,
       borderRadius: '12px',
-      boxShadow: '0 10px 25px rgba(15, 23, 42, 0.16)',
+      boxShadow: colors.shadowStrong,
       padding: '10px',
       zIndex: 20
     },
@@ -620,17 +681,17 @@ export default function Chat() {
       width: '290px',
       maxHeight: '360px',
       overflowY: 'auto',
-      backgroundColor: '#fff',
-      border: '1px solid #dfe6f4',
+      backgroundColor: colors.glassStrong,
+      border: `1px solid ${colors.border}`,
       borderRadius: '14px',
-      boxShadow: '0 14px 32px rgba(15, 23, 42, 0.18)',
+      boxShadow: colors.shadowStrong,
       padding: '10px',
       zIndex: 30
     },
     teamMembersTitle: {
       margin: '2px 0 10px 0',
       fontSize: '12px',
-      color: '#6b7280',
+      color: colors.textSecondary,
       fontWeight: 700
     },
     memberRow: {
@@ -638,10 +699,11 @@ export default function Chat() {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '10px',
-      border: '1px solid #edf0f7',
+      border: `1px solid ${colors.border}`,
       borderRadius: '10px',
       padding: '8px',
-      marginBottom: '8px'
+      marginBottom: '8px',
+      background: colors.glassSoft
     },
     memberMeta: {
       display: 'flex',
@@ -650,9 +712,9 @@ export default function Chat() {
       minWidth: 0
     },
     dmMemberBtn: {
-      border: '1px solid #5b5fef',
-      backgroundColor: '#eef2ff',
-      color: '#3730a3',
+      border: `1px solid ${colors.blue}`,
+      backgroundColor: colors.primaryGhost,
+      color: colors.blue,
       borderRadius: '8px',
       fontSize: '11px',
       fontWeight: 700,
@@ -662,9 +724,9 @@ export default function Chat() {
     },
     privateAction: {
       width: '100%',
-      border: '1px solid #5b5fef',
-      backgroundColor: '#eef2ff',
-      color: '#3730a3',
+      border: `1px solid ${colors.blue}`,
+      backgroundColor: colors.primaryGhost,
+      color: colors.blue,
       borderRadius: '8px',
       fontSize: '12px',
       fontWeight: 700,
@@ -686,8 +748,8 @@ export default function Chat() {
       padding: '0 5px'
     },
     inputWrap: {
-      backgroundColor: '#fff',
-      borderTop: '1px solid #e9ecf7',
+      backgroundColor: colors.glassStrong,
+      borderTop: `1px solid ${colors.border}`,
       padding: '14px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -696,7 +758,7 @@ export default function Chat() {
   };
 
   if (loadingTeams) {
-    return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading chat...</div>;
+    return <div style={{ textAlign: 'center', marginTop: '40px', color: colors.textSecondary }}>Loading chat...</div>;
   }
 
   return (
@@ -709,7 +771,7 @@ export default function Chat() {
         }
       `}</style>
 
-      {error && <p style={{ color: '#d11124' }}>{error}</p>}
+      {error && <p style={{ color: colors.red }}>{error}</p>}
 
       <div className="chat-frame" style={styles.frame}>
         <div className="side-panel" style={styles.card}>
@@ -728,7 +790,7 @@ export default function Chat() {
                 </span>
               </button>
             </div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            <div style={{ fontSize: '12px', color: colors.textSecondary }}>
               {viewMode === 'team' ? 'Your team channels' : '1:1 conversations'}
             </div>
           </div>
@@ -736,21 +798,21 @@ export default function Chat() {
           <div style={styles.sideScroll}>
             {viewMode === 'team' ? (
               teams.length === 0 ? (
-                <div style={{ padding: '14px', color: '#666' }}>You are not in any teams yet.</div>
+                <div style={{ padding: '14px', color: colors.textSecondary }}>You are not in any teams yet.</div>
               ) : (
                 teams.map(team => (
                   <div key={team.id} style={styles.sideItem(team.id === selectedTeamId)} onClick={() => setSelectedTeamId(team.id)}>
                     <div style={styles.avatar(team.teamName || team.username)}>{getInitials(team.teamName || team.username)}</div>
                     <div style={styles.sideItemMain}>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {team.teamName || team.competitionName || 'Untitled Team'}
                         </div>
                         {unreadTeamById[team.id] ? (
                           <span style={styles.unreadDot}>{unreadTeamById[team.id] > 9 ? '9+' : unreadTeamById[team.id]}</span>
                         ) : null}
                       </div>
-                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {team.competitionName || 'No competition set'}
                       </div>
                     </div>
@@ -759,7 +821,7 @@ export default function Chat() {
               )
             ) : (
               dmConversations.length === 0 ? (
-                <div style={{ padding: '14px', color: '#666' }}>No direct conversations yet.</div>
+                <div style={{ padding: '14px', color: colors.textSecondary }}>No direct conversations yet.</div>
               ) : (
                 dmConversations.map(conv => (
                   <div
@@ -770,12 +832,12 @@ export default function Chat() {
                     <div style={styles.avatar(conv.otherUsername)}>{getInitials(conv.otherUsername)}</div>
                     <div style={styles.sideItemMain}>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ fontWeight: 700, color: '#111827' }}>{conv.otherUsername}</div>
+                        <div style={{ fontWeight: 700, color: colors.textMain }}>{conv.otherUsername}</div>
                         {unreadDmByUser[conv.otherUsername] ? (
                           <span style={styles.unreadDot}>{unreadDmByUser[conv.otherUsername] > 9 ? '9+' : unreadDmByUser[conv.otherUsername]}</span>
                         ) : null}
                       </div>
-                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {conv.lastContent || 'Start chatting...'}
                       </div>
                     </div>
@@ -801,17 +863,17 @@ export default function Chat() {
                 {getInitials(viewMode === 'team' ? selectedTeam?.teamName || 'Team' : selectedDmUser || 'DM')}
               </div>
               <div>
-                <div style={{ fontWeight: 700, color: '#111827' }}>
+                <div style={{ fontWeight: 700, color: colors.textMain }}>
                   {viewMode === 'team'
                     ? (selectedTeam ? (selectedTeam.teamName || selectedTeam.competitionName || 'Team Chat') : 'Select a team')
                     : (selectedDmUser || 'Select a person')}
                 </div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                <div style={{ fontSize: '12px', color: colors.textSecondary }}>
                   {viewMode === 'team' ? (selectedTeam?.competitionName || 'Realtime workspace') : 'Private chat'}
                 </div>
               </div>
               {viewMode === 'team' && selectedTeam ? (
-                <div style={{ color: '#6b7280', fontSize: '12px', marginLeft: '2px' }}>▾</div>
+                <div style={{ color: colors.textSecondary, fontSize: '12px', marginLeft: '2px' }}>▾</div>
               ) : null}
             </div>
             <span style={styles.status}>{socketReady ? 'Live connected' : 'Reconnecting...'}</span>
@@ -827,10 +889,10 @@ export default function Chat() {
                       <div style={styles.memberMeta}>
                         <div style={styles.avatar(member)}>{getInitials(member)}</div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: colors.textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {member}
                           </div>
-                          <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                          <div style={{ fontSize: '11px', color: colors.textSecondary }}>
                             {member === selectedTeam.username ? 'Team Lead' : 'Member'}
                           </div>
                         </div>
@@ -846,7 +908,7 @@ export default function Chat() {
                           Message
                         </button>
                       ) : (
-                        <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 700 }}>You</span>
+                        <span style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: 700 }}>You</span>
                       )}
                     </div>
                   );
@@ -857,15 +919,15 @@ export default function Chat() {
 
           <div style={styles.thread}>
             {viewMode === 'team' && !selectedTeam ? (
-              <p style={{ color: '#666' }}>Choose a team to open chat.</p>
+              <p style={{ color: colors.textSecondary }}>Choose a team to open chat.</p>
             ) : viewMode === 'direct' && !selectedDmUser ? (
-              <p style={{ color: '#666' }}>Hover a teammate message and click "Message privately".</p>
+              <p style={{ color: colors.textSecondary }}>Hover a teammate message and click "Message privately".</p>
             ) : loadingMessages && viewMode === 'team' ? (
-              <p style={{ color: '#666' }}>Loading messages...</p>
+              <p style={{ color: colors.textSecondary }}>Loading messages...</p>
             ) : loadingDmMessages && viewMode === 'direct' ? (
-              <p style={{ color: '#666' }}>Loading direct messages...</p>
+              <p style={{ color: colors.textSecondary }}>Loading direct messages...</p>
             ) : activeMessages.length === 0 ? (
-              <p style={{ color: '#666' }}>No messages yet. Start the conversation.</p>
+              <p style={{ color: colors.textSecondary }}>No messages yet. Start the conversation.</p>
             ) : (
               activeMessages.map(msg => {
                 const mine = msg.senderUsername === user?.username;
@@ -891,8 +953,8 @@ export default function Chat() {
                           <div style={styles.profileMeta}>
                             <div style={styles.avatar(msg.senderUsername)}>{getInitials(msg.senderUsername)}</div>
                             <div>
-                              <div style={{ fontWeight: 700, color: '#111827', fontSize: '13px' }}>{msg.senderUsername}</div>
-                              <div style={{ color: '#6b7280', fontSize: '11px' }}>Team member</div>
+                              <div style={{ fontWeight: 700, color: colors.textMain, fontSize: '13px' }}>{msg.senderUsername}</div>
+                              <div style={{ color: colors.textSecondary, fontSize: '11px' }}>Team member</div>
                             </div>
                           </div>
                           <button
@@ -929,8 +991,9 @@ export default function Chat() {
                 flex: 1,
                 padding: '12px 14px',
                 borderRadius: '999px',
-                border: '1px solid #d8deeb',
-                backgroundColor: '#f8fafc',
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.mutedSurface,
+                color: colors.textMain,
                 outline: 'none'
               }}
             />
@@ -941,7 +1004,7 @@ export default function Chat() {
                 padding: '11px 18px',
                 border: 'none',
                 borderRadius: '999px',
-                background: 'linear-gradient(135deg, #5b5fef 0%, #6d75f7 100%)',
+                background: `linear-gradient(135deg, ${colors.blueStrong} 0%, ${colors.blue} 100%)`,
                 color: '#fff',
                 cursor: 'pointer',
                 opacity: emptyInput || sending || !draft.trim() ? 0.6 : 1,
@@ -956,804 +1019,3 @@ export default function Chat() {
     </div>
   );
 }
-
-
-// import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-// import { AuthContext } from '../context/AuthContext';
-
-// export default function Chat() {
-//   const { user, token } = useContext(AuthContext);
-//   const [viewMode, setViewMode] = useState('team');
-//   const [teams, setTeams] = useState([]);
-//   const [selectedTeamId, setSelectedTeamId] = useState('');
-//   const [messages, setMessages] = useState([]);
-//   const [dmConversations, setDmConversations] = useState([]);
-//   const [selectedDmUser, setSelectedDmUser] = useState('');
-//   const [dmMessages, setDmMessages] = useState([]);
-//   const [draft, setDraft] = useState('');
-//   const [loadingTeams, setLoadingTeams] = useState(true);
-//   const [loadingMessages, setLoadingMessages] = useState(false);
-//   const [loadingDmMessages, setLoadingDmMessages] = useState(false);
-//   const [sending, setSending] = useState(false);
-//   const [socketReady, setSocketReady] = useState(false);
-//   const [activeProfileCardId, setActiveProfileCardId] = useState('');
-//   const [showTeamMembersCard, setShowTeamMembersCard] = useState(false);
-//   const [unreadTeamById, setUnreadTeamById] = useState({});
-//   const [unreadDmByUser, setUnreadDmByUser] = useState({});
-//   const [error, setError] = useState('');
-
-//   const endRef = useRef(null);
-//   const socketRef = useRef(null);
-//   const selectedTeamRef = useRef('');
-//   const selectedDmRef = useRef('');
-//   const viewModeRef = useRef('team');
-//   const unreadTeamRef = useRef({});
-//   const unreadDmRef = useRef({});
-
-//   // ... [KEEP ALL ORIGINAL LOGIC METHODS: fetchMyTeams, fetchMessages, etc. remain UNTOUCHED] ...
-//   const selectedTeam = useMemo(() => teams.find(team => team.id === selectedTeamId) || null, [teams, selectedTeamId]);
-//   const selectedTeamMembers = useMemo(() => {
-//     if (!selectedTeam) return [];
-//     const owner = selectedTeam.username ? [selectedTeam.username] : [];
-//     const accepted = Array.isArray(selectedTeam.acceptedUsernames) ? selectedTeam.acceptedUsernames : [];
-//     return Array.from(new Set([...owner, ...accepted].filter(Boolean)));
-//   }, [selectedTeam]);
-
-//   const unreadStorageKey = user?.username ? `teamFinderUnread_${user.username}` : null;
-//   const totalTeamUnread = Object.values(unreadTeamById).reduce((sum, count) => sum + count, 0);
-//   const totalDmUnread = Object.values(unreadDmByUser).reduce((sum, count) => sum + count, 0);
-
-//   const getInitials = (name) => {
-//     if (!name) return '?';
-//     const parts = name.trim().split(/\s+/);
-//     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-//     return (parts[0][0] + parts[1][0]).toUpperCase();
-//   };
-
-//   const avatarPalette = ['#007AFF', '#FF9500', '#5856D6', '#FF2D55', '#34C759'];
-//   const avatarColor = (name) => {
-//     let hash = 0;
-//     const value = name || '';
-//     for (let i = 0; i < value.length; i += 1) hash = value.charCodeAt(i) + ((hash << 5) - hash);
-//     return avatarPalette[Math.abs(hash) % avatarPalette.length];
-//   };
-
-//   const formatTime = (value) => {
-//     if (!value) return '';
-//     const date = new Date(value);
-//     if (Number.isNaN(date.getTime())) return '';
-//     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-//   };
-
-//   const fetchMyTeams = async () => {
-//     try {
-//       setLoadingTeams(true);
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load teams');
-//       const data = await response.json();
-//       setTeams(data);
-//       if (data.length > 0 && !selectedTeamId) setSelectedTeamId(data[0].id);
-//     } catch (err) { setError('Could not load your teams.'); } finally { setLoadingTeams(false); }
-//   };
-
-//   const fetchMessages = async (teamId) => {
-//     if (!teamId) return;
-//     try {
-//       setLoadingMessages(true);
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load messages');
-//       const data = await response.json();
-//       setMessages(data);
-//     } catch (err) { setError('Could not load team chat messages.'); } finally { setLoadingMessages(false); }
-//   };
-
-//   const fetchDmConversations = async () => {
-//     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load direct conversations');
-//       const data = await response.json();
-//       setDmConversations(data);
-//     } catch (err) { setError('Could not load direct conversations.'); }
-//   };
-
-//   const fetchDmMessages = async (otherUsername) => {
-//     if (!otherUsername) return;
-//     try {
-//       setLoadingDmMessages(true);
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load direct messages');
-//       const data = await response.json();
-//       setDmMessages(data);
-//     } catch (err) { setError('Could not load direct messages.'); } finally { setLoadingDmMessages(false); }
-//   };
-
-//   const upsertConversation = (otherUsername, lastContent, lastTimestamp) => {
-//     setDmConversations(prev => {
-//       const existing = prev.find(item => item.otherUsername === otherUsername);
-//       if (existing) return [{ ...existing, lastContent, lastTimestamp }, ...prev.filter(item => item.otherUsername !== otherUsername)];
-//       return [{ otherUsername, lastContent, lastTimestamp }, ...prev];
-//     });
-//   };
-
-//   const startPrivateChat = (username) => {
-//     if (!username || username === user?.username) return;
-//     setViewMode('direct');
-//     setSelectedDmUser(username);
-//     fetchDmMessages(username);
-//     if (!dmConversations.some(conv => conv.otherUsername === username)) upsertConversation(username, '', new Date().toISOString());
-//   };
-
-//   const subscribeTeam = (teamId) => {
-//     const socket = socketRef.current;
-//     if (!teamId || !socket || socket.readyState !== WebSocket.OPEN) return;
-//     socket.send(JSON.stringify({ type: 'subscribe', teamId }));
-//   };
-
-//   const subscribePrivate = (otherUsername) => {
-//     const socket = socketRef.current;
-//     if (!otherUsername || !socket || socket.readyState !== WebSocket.OPEN) return;
-//     socket.send(JSON.stringify({ type: 'private_subscribe', otherUsername }));
-//   };
-
-//   const persistUnreadState = (teamMap, dmMap) => {
-//     if (!unreadStorageKey) return;
-//     const payload = { team: teamMap, dm: dmMap };
-//     localStorage.setItem(unreadStorageKey, JSON.stringify(payload));
-//     window.dispatchEvent(new Event('teamfinder-unread-updated'));
-//   };
-
-//   const markTeamAsRead = (teamId) => {
-//     if (!teamId) return;
-//     setUnreadTeamById(prev => {
-//       if (!prev[teamId]) return prev;
-//       const next = { ...prev }; delete next[teamId];
-//       unreadTeamRef.current = next;
-//       persistUnreadState(next, unreadDmRef.current);
-//       return next;
-//     });
-//   };
-
-//   const markDmAsRead = (otherUsername) => {
-//     if (!otherUsername) return;
-//     setUnreadDmByUser(prev => {
-//       if (!prev[otherUsername]) return prev;
-//       const next = { ...prev }; delete next[otherUsername];
-//       unreadDmRef.current = next;
-//       persistUnreadState(unreadTeamRef.current, next);
-//       return next;
-//     });
-//   };
-
-//   const handleSend = async () => {
-//     const content = draft.trim();
-//     if (!content) return;
-//     const socket = socketRef.current;
-//     const useSocket = socket && socket.readyState === WebSocket.OPEN;
-//     try {
-//       setSending(true);
-//       if (viewMode === 'team') {
-//         if (!selectedTeamId) return;
-//         if (useSocket) socket.send(JSON.stringify({ type: 'message', teamId: selectedTeamId, content }));
-//         else {
-//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
-//             method: 'POST',
-//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ content })
-//           });
-//           if (!response.ok) throw new Error('Failed to send');
-//           const newMessage = await response.json();
-//           setMessages(prev => [...prev, newMessage]);
-//         }
-//       } else {
-//         if (!selectedDmUser) return;
-//         if (useSocket) socket.send(JSON.stringify({ type: 'private_message', toUsername: selectedDmUser, content }));
-//         else {
-//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
-//             method: 'POST',
-//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ content })
-//           });
-//           if (!response.ok) throw new Error('Failed to send');
-//           const newMessage = await response.json();
-//           setDmMessages(prev => [...prev, newMessage]);
-//           upsertConversation(selectedDmUser, newMessage.content, newMessage.timestamp);
-//         }
-//       }
-//       setDraft(''); setError('');
-//     } catch (err) { setError('Could not send message.'); } finally { setSending(false); }
-//   };
-
-//   // ... [KEEP ALL USEEFFECT HOOKS AS THEY ARE] ...
-//   useEffect(() => { if (!token) return; fetchMyTeams(); fetchDmConversations(); }, [token]);
-//   useEffect(() => { if (!unreadStorageKey) return; try { const raw = localStorage.getItem(unreadStorageKey); if (!raw) return; const parsed = JSON.parse(raw); setUnreadTeamById(parsed?.team || {}); setUnreadDmByUser(parsed?.dm || {}); } catch (e) { setUnreadTeamById({}); setUnreadDmByUser({}); } }, [unreadStorageKey]);
-//   useEffect(() => { if (teams.length === 0) { setSelectedTeamId(''); return; } const exists = teams.some(team => team.id === selectedTeamId); if (!exists) setSelectedTeamId(teams[0].id); }, [teams, selectedTeamId]);
-//   useEffect(() => { selectedTeamRef.current = selectedTeamId; }, [selectedTeamId]);
-//   useEffect(() => { selectedDmRef.current = selectedDmUser; }, [selectedDmUser]);
-//   useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
-//   useEffect(() => { unreadTeamRef.current = unreadTeamById; }, [unreadTeamById]);
-//   useEffect(() => { unreadDmRef.current = unreadDmByUser; }, [unreadDmByUser]);
-//   useEffect(() => { if (!token || !selectedTeamId) return; fetchMessages(selectedTeamId); markTeamAsRead(selectedTeamId); setShowTeamMembersCard(false); }, [token, selectedTeamId]);
-//   useEffect(() => { if (!token || !selectedDmUser) return; fetchDmMessages(selectedDmUser); markDmAsRead(selectedDmUser); }, [token, selectedDmUser]);
-//   useEffect(() => { if (viewMode !== 'team') setShowTeamMembersCard(false); }, [viewMode]);
-
-//   useEffect(() => {
-//     if (!token) return;
-//     const wsUrl = `ws://localhost:8080/ws-chat?token=${encodeURIComponent(token)}`;
-//     const socket = new WebSocket(wsUrl);
-//     socketRef.current = socket;
-//     socket.onopen = () => { setSocketReady(true); if (selectedTeamRef.current) subscribeTeam(selectedTeamRef.current); if (selectedDmRef.current) subscribePrivate(selectedDmRef.current); };
-//     socket.onmessage = event => {
-//         try {
-//             const payload = JSON.parse(event.data);
-//             if (payload.type === 'message' && payload.message) {
-//                 const incomingTeamId = payload.teamId;
-//                 if (incomingTeamId === selectedTeamRef.current) {
-//                     setMessages(prev => { const exists = prev.some(item => item.id === payload.message.id); return exists ? prev : [...prev, payload.message]; });
-//                 }
-//                 if (!(viewModeRef.current === 'team' && incomingTeamId === selectedTeamRef.current)) {
-//                     setUnreadTeamById(prev => { const next = { ...prev, [incomingTeamId]: (prev[incomingTeamId] || 0) + 1 }; unreadTeamRef.current = next; persistUnreadState(next, unreadDmRef.current); return next; });
-//                 }
-//             } else if (payload.type === 'private_message' && payload.message) {
-//                 const incoming = payload.message;
-//                 const isCurrentThread = incoming.senderUsername === selectedDmRef.current || incoming.receiverUsername === selectedDmRef.current;
-//                 if (isCurrentThread) {
-//                     setDmMessages(prev => { const exists = prev.some(item => item.id === incoming.id); return exists ? prev : [...prev, incoming]; });
-//                 }
-//                 const otherUsername = incoming.senderUsername === user?.username ? incoming.receiverUsername : incoming.senderUsername;
-//                 upsertConversation(otherUsername, incoming.content, incoming.timestamp);
-//                 if (!(viewModeRef.current === 'direct' && selectedDmRef.current === otherUsername)) {
-//                     setUnreadDmByUser(prev => { const next = { ...prev, [otherUsername]: (prev[otherUsername] || 0) + 1 }; unreadDmRef.current = next; persistUnreadState(unreadTeamRef.current, next); return next; });
-//                 }
-//             }
-//         } catch (e) { setError('Invalid payload'); }
-//     };
-//     socket.onclose = () => setSocketReady(false);
-//     return () => { setSocketReady(false); socket.close(); };
-//   }, [token, user?.username]);
-
-//   useEffect(() => { subscribeTeam(selectedTeamId); }, [selectedTeamId, socketReady]);
-//   useEffect(() => { subscribePrivate(selectedDmUser); }, [selectedDmUser, socketReady]);
-//   useEffect(() => { if (!socketReady) return; teams.forEach(team => subscribeTeam(team.id)); }, [teams, socketReady]);
-//   useEffect(() => { if (!socketReady) return; dmConversations.forEach(conv => subscribePrivate(conv.otherUsername)); }, [dmConversations, socketReady]);
-//   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, dmMessages, viewMode]);
-  
-//   useEffect(() => {
-//     const handleOutsideClick = (event) => {
-//         const target = event.target;
-//         if (target.closest('[data-profile-card="true"]') || target.closest('[data-profile-trigger="true"]') || target.closest('[data-team-members-card="true"]') || target.closest('[data-team-members-trigger="true"]')) return;
-//         setActiveProfileCardId(''); setShowTeamMembersCard(false);
-//     };
-//     document.addEventListener('mousedown', handleOutsideClick);
-//     return () => document.removeEventListener('mousedown', handleOutsideClick);
-//   }, []);
-
-//   const activeMessages = viewMode === 'team' ? messages : dmMessages;
-//   const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
-
-//   // --- UPDATED GLASSY STYLES ---
-//   const glassStyle = {
-//     background: 'rgba(255, 255, 255, 0.7)',
-//     backdropFilter: 'blur(20px)',
-//     border: '1px solid rgba(255, 255, 255, 0.4)',
-//     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-//   };
-
-//   const styles = {
-//     shell: { maxWidth: '1240px', margin: '0 auto', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-//     frame: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', height: '85vh' },
-//     card: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
-//     chatCard: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'grid', gridTemplateRows: '80px 1fr 80px' },
-//     sideHeader: { padding: '20px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-//     toggleWrap: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
-//     toggleBtn: (active) => ({
-//       padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-//       backgroundColor: active ? '#007AFF' : 'rgba(0,0,0,0.05)',
-//       color: active ? '#fff' : '#555', fontWeight: '600', fontSize: '13px'
-//     }),
-//     sideScroll: { flex: 1, overflowY: 'auto', padding: '10px' },
-//     sideItem: (isActive) => ({
-//       display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', cursor: 'pointer',
-//       backgroundColor: isActive ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
-//       transition: 'all 0.2s'
-//     }),
-//     avatar: (name) => ({
-//       width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-//       backgroundColor: avatarColor(name), color: '#fff', fontWeight: 'bold', fontSize: '14px'
-//     }),
-//     chatTop: { padding: '0 25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-//     thread: { overflowY: 'auto', padding: '25px' },
-//     bubble: (mine) => ({
-//       padding: '12px 18px', maxWidth: '70%', borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-//       backgroundColor: mine ? '#007AFF' : 'rgba(255,255,255,0.8)',
-//       color: mine ? '#fff' : '#000', marginBottom: '10px', alignSelf: mine ? 'flex-end' : 'flex-start',
-//       boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-//     }),
-//     inputWrap: { padding: '15px 25px', display: 'flex', gap: '10px', alignItems: 'center' },
-//     unreadDot: { backgroundColor: '#FF9500', color: '#fff', borderRadius: '20px', padding: '2px 8px', fontSize: '10px', fontWeight: 'bold' }
-//   };
-
-//   if (loadingTeams) return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading chat...</div>;
-
-//   return (
-//     <div style={styles.shell}>
-//       <div style={styles.frame}>
-//         <div style={styles.card}>
-//           <div style={styles.sideHeader}>
-//             <div style={styles.toggleWrap}>
-//               <button style={styles.toggleBtn(viewMode === 'team')} onClick={() => setViewMode('team')}>Team</button>
-//               <button style={styles.toggleBtn(viewMode === 'direct')} onClick={() => setViewMode('direct')}>Direct</button>
-//             </div>
-//           </div>
-//           <div style={styles.sideScroll}>
-//              {/* [Keep your existing map logic here for teams/DMs] */}
-//              {viewMode === 'team' ? 
-//                 teams.map(team => (
-//                     <div key={team.id} style={styles.sideItem(team.id === selectedTeamId)} onClick={() => setSelectedTeamId(team.id)}>
-//                         <div style={styles.avatar(team.teamName)}>{getInitials(team.teamName)}</div>
-//                         <div><div style={{fontWeight: '600'}}>{team.teamName}</div><div style={{fontSize: '12px', opacity: 0.6}}>{team.competitionName}</div></div>
-//                     </div>
-//                 ))
-//              : 
-//                 dmConversations.map(conv => (
-//                     <div key={conv.otherUsername} style={styles.sideItem(conv.otherUsername === selectedDmUser)} onClick={() => setSelectedDmUser(conv.otherUsername)}>
-//                         <div style={styles.avatar(conv.otherUsername)}>{getInitials(conv.otherUsername)}</div>
-//                         <div style={{fontWeight: '600'}}>{conv.otherUsername}</div>
-//                     </div>
-//                 ))
-//              }
-//           </div>
-//         </div>
-
-//         <div style={styles.chatCard}>
-//           <div style={styles.chatTop}>
-//             <div style={{fontWeight: '700', fontSize: '18px'}}>
-//                 {viewMode === 'team' ? (selectedTeam?.teamName || 'Select Team') : (selectedDmUser || 'Select Chat')}
-//             </div>
-//             <div style={{color: socketReady ? '#34C759' : '#FF9500', fontSize: '12px', fontWeight: 'bold'}}>
-//                 {socketReady ? '● Online' : '● Reconnecting'}
-//             </div>
-//           </div>
-
-//           <div style={styles.thread}>
-//             {activeMessages.map(msg => (
-//                 <div key={msg.id} style={{display: 'flex', flexDirection: 'column', alignItems: msg.senderUsername === user?.username ? 'flex-end' : 'flex-start'}}>
-//                     <div style={styles.bubble(msg.senderUsername === user?.username)}>{msg.content}</div>
-//                 </div>
-//             ))}
-//             <div ref={endRef} />
-//           </div>
-
-//           <div style={styles.inputWrap}>
-//             <input 
-//                 style={{flex: 1, padding: '12px 20px', borderRadius: '999px', border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(255,255,255,0.5)'}}
-//                 placeholder="Type a message..." value={draft} onChange={(e) => setDraft(e.target.value)} 
-//             />
-//             <button style={{padding: '10px 20px', borderRadius: '999px', border: 'none', backgroundColor: '#007AFF', color: 'white', fontWeight: '600'}} onClick={handleSend}>Send</button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-// import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-// import { AuthContext } from '../context/AuthContext';
-
-// export default function Chat() {
-//   const { user, token } = useContext(AuthContext);
-//   const [viewMode, setViewMode] = useState('team');
-//   const [teams, setTeams] = useState([]);
-//   const [selectedTeamId, setSelectedTeamId] = useState('');
-//   const [messages, setMessages] = useState([]);
-//   const [dmConversations, setDmConversations] = useState([]);
-//   const [selectedDmUser, setSelectedDmUser] = useState('');
-//   const [dmMessages, setDmMessages] = useState([]);
-//   const [draft, setDraft] = useState('');
-//   const [loadingTeams, setLoadingTeams] = useState(true);
-//   const [loadingMessages, setLoadingMessages] = useState(false);
-//   const [loadingDmMessages, setLoadingDmMessages] = useState(false);
-//   const [sending, setSending] = useState(false);
-//   const [socketReady, setSocketReady] = useState(false);
-//   const [activeProfileCardId, setActiveProfileCardId] = useState('');
-//   const [showTeamMembersCard, setShowTeamMembersCard] = useState(false);
-//   const [unreadTeamById, setUnreadTeamById] = useState({});
-//   const [unreadDmByUser, setUnreadDmByUser] = useState({});
-//   const [error, setError] = useState('');
-
-//   const endRef = useRef(null);
-//   const socketRef = useRef(null);
-//   const selectedTeamRef = useRef('');
-//   const selectedDmRef = useRef('');
-//   const viewModeRef = useRef('team');
-//   const unreadTeamRef = useRef({});
-//   const unreadDmRef = useRef({});
-
-//   // --- LOGIC METHODS PRESERVED ---
-//   const selectedTeam = useMemo(() => teams.find(team => team.id === selectedTeamId) || null, [teams, selectedTeamId]);
-  
-//   const selectedTeamMembers = useMemo(() => {
-//     if (!selectedTeam) return [];
-//     const owner = selectedTeam.username ? [selectedTeam.username] : [];
-//     const accepted = Array.isArray(selectedTeam.acceptedUsernames) ? selectedTeam.acceptedUsernames : [];
-//     return Array.from(new Set([...owner, ...accepted].filter(Boolean)));
-//   }, [selectedTeam]);
-
-//   const unreadStorageKey = user?.username ? `teamFinderUnread_${user.username}` : null;
-//   const totalTeamUnread = Object.values(unreadTeamById).reduce((sum, count) => sum + count, 0);
-//   const totalDmUnread = Object.values(unreadDmByUser).reduce((sum, count) => sum + count, 0);
-
-//   const getInitials = (name) => {
-//     if (!name) return '?';
-//     const parts = name.trim().split(/\s+/);
-//     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-//     return (parts[0][0] + parts[1][0]).toUpperCase();
-//   };
-
-//   const avatarPalette = ['#007AFF', '#FF9500', '#5856D6', '#FF2D55', '#34C759'];
-//   const avatarColor = (name) => {
-//     let hash = 0;
-//     const value = name || '';
-//     for (let i = 0; i < value.length; i += 1) hash = value.charCodeAt(i) + ((hash << 5) - hash);
-//     return avatarPalette[Math.abs(hash) % avatarPalette.length];
-//   };
-
-//   const formatTime = (value) => {
-//     if (!value) return '';
-//     const date = new Date(value);
-//     if (Number.isNaN(date.getTime())) return '';
-//     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-//   };
-
-//   const fetchMyTeams = async () => {
-//     try {
-//       setLoadingTeams(true);
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load teams');
-//       const data = await response.json();
-//       setTeams(data);
-//       if (data.length > 0 && !selectedTeamId) setSelectedTeamId(data[0].id);
-//     } catch (err) { setError('Could not load your teams.'); } finally { setLoadingTeams(false); }
-//   };
-
-//   const fetchMessages = async (teamId) => {
-//     if (!teamId) return;
-//     try {
-//       setLoadingMessages(true);
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load messages');
-//       const data = await response.json();
-//       setMessages(data);
-//     } catch (err) { setError('Could not load team chat messages.'); } finally { setLoadingMessages(false); }
-//   };
-
-//   const fetchDmConversations = async () => {
-//     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load direct conversations');
-//       const data = await response.json();
-//       setDmConversations(data);
-//     } catch (err) { setError('Could not load direct conversations.'); }
-//   };
-
-//   const fetchDmMessages = async (otherUsername) => {
-//     if (!otherUsername) return;
-//     try {
-//       setLoadingDmMessages(true);
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(otherUsername)}/messages`, {
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to load direct messages');
-//       const data = await response.json();
-//       setDmMessages(data);
-//     } catch (err) { setError('Could not load direct messages.'); } finally { setLoadingDmMessages(false); }
-//   };
-
-//   const upsertConversation = (otherUsername, lastContent, lastTimestamp) => {
-//     setDmConversations(prev => {
-//       const existing = prev.find(item => item.otherUsername === otherUsername);
-//       if (existing) return [{ ...existing, lastContent, lastTimestamp }, ...prev.filter(item => item.otherUsername !== otherUsername)];
-//       return [{ otherUsername, lastContent, lastTimestamp }, ...prev];
-//     });
-//   };
-
-//   const startPrivateChat = (username) => {
-//     if (!username || username === user?.username) return;
-//     setViewMode('direct');
-//     setSelectedDmUser(username);
-//     fetchDmMessages(username);
-//     if (!dmConversations.some(conv => conv.otherUsername === username)) upsertConversation(username, '', new Date().toISOString());
-//   };
-
-//   const subscribeTeam = (teamId) => {
-//     const socket = socketRef.current;
-//     if (!teamId || !socket || socket.readyState !== WebSocket.OPEN) return;
-//     socket.send(JSON.stringify({ type: 'subscribe', teamId }));
-//   };
-
-//   const subscribePrivate = (otherUsername) => {
-//     const socket = socketRef.current;
-//     if (!otherUsername || !socket || socket.readyState !== WebSocket.OPEN) return;
-//     socket.send(JSON.stringify({ type: 'private_subscribe', otherUsername }));
-//   };
-
-//   const persistUnreadState = (teamMap, dmMap) => {
-//     if (!unreadStorageKey) return;
-//     const payload = { team: teamMap, dm: dmMap };
-//     localStorage.setItem(unreadStorageKey, JSON.stringify(payload));
-//     window.dispatchEvent(new Event('teamfinder-unread-updated'));
-//   };
-
-//   const markTeamAsRead = (teamId) => {
-//     if (!teamId) return;
-//     setUnreadTeamById(prev => {
-//       if (!prev[teamId]) return prev;
-//       const next = { ...prev }; delete next[teamId];
-//       unreadTeamRef.current = next;
-//       persistUnreadState(next, unreadDmRef.current);
-//       return next;
-//     });
-//   };
-
-//   const markDmAsRead = (otherUsername) => {
-//     if (!otherUsername) return;
-//     setUnreadDmByUser(prev => {
-//       if (!prev[otherUsername]) return prev;
-//       const next = { ...prev }; delete next[otherUsername];
-//       unreadDmRef.current = next;
-//       persistUnreadState(unreadTeamRef.current, next);
-//       return next;
-//     });
-//   };
-
-//   const handleSend = async () => {
-//     const content = draft.trim();
-//     if (!content) return;
-//     const socket = socketRef.current;
-//     const useSocket = socket && socket.readyState === WebSocket.OPEN;
-//     try {
-//       setSending(true);
-//       if (viewMode === 'team') {
-//         if (!selectedTeamId) return;
-//         if (useSocket) socket.send(JSON.stringify({ type: 'message', teamId: selectedTeamId, content }));
-//         else {
-//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${selectedTeamId}/messages`, {
-//             method: 'POST',
-//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ content })
-//           });
-//           if (!response.ok) throw new Error('Failed to send');
-//           const newMessage = await response.json();
-//           setMessages(prev => [...prev, newMessage]);
-//         }
-//       } else {
-//         if (!selectedDmUser) return;
-//         if (useSocket) socket.send(JSON.stringify({ type: 'private_message', toUsername: selectedDmUser, content }));
-//         else {
-//           const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/private/${encodeURIComponent(selectedDmUser)}/messages`, {
-//             method: 'POST',
-//             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ content })
-//           });
-//           if (!response.ok) throw new Error('Failed to send');
-//           const newMessage = await response.json();
-//           setDmMessages(prev => [...prev, newMessage]);
-//           upsertConversation(selectedDmUser, newMessage.content, newMessage.timestamp);
-//         }
-//       }
-//       setDraft(''); setError('');
-//     } catch (err) { setError('Could not send message.'); } finally { setSending(false); }
-//   };
-
-//   // --- USE EFFECTS ---
-//   useEffect(() => { if (!token) return; fetchMyTeams(); fetchDmConversations(); }, [token]);
-//   useEffect(() => { if (!unreadStorageKey) return; try { const raw = localStorage.getItem(unreadStorageKey); if (!raw) return; const parsed = JSON.parse(raw); setUnreadTeamById(parsed?.team || {}); setUnreadDmByUser(parsed?.dm || {}); } catch (e) { setUnreadTeamById({}); setUnreadDmByUser({}); } }, [unreadStorageKey]);
-//   useEffect(() => { if (teams.length === 0) { setSelectedTeamId(''); return; } const exists = teams.some(team => team.id === selectedTeamId); if (!exists) setSelectedTeamId(teams[0].id); }, [teams, selectedTeamId]);
-//   useEffect(() => { selectedTeamRef.current = selectedTeamId; }, [selectedTeamId]);
-//   useEffect(() => { selectedDmRef.current = selectedDmUser; }, [selectedDmUser]);
-//   useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
-//   useEffect(() => { unreadTeamRef.current = unreadTeamById; }, [unreadTeamById]);
-//   useEffect(() => { unreadDmRef.current = unreadDmByUser; }, [unreadDmByUser]);
-//   useEffect(() => { if (!token || !selectedTeamId) return; fetchMessages(selectedTeamId); markTeamAsRead(selectedTeamId); setShowTeamMembersCard(false); }, [token, selectedTeamId]);
-//   useEffect(() => { if (!token || !selectedDmUser) return; fetchDmMessages(selectedDmUser); markDmAsRead(selectedDmUser); }, [token, selectedDmUser]);
-//   useEffect(() => { if (viewMode !== 'team') setShowTeamMembersCard(false); }, [viewMode]);
-
-//   useEffect(() => {
-//     if (!token) return;
-//     // Updated to point to your space
-//     const wsUrl = `wss://garvsharma9-teamfinder-api.hf.space/ws-chat?token=${encodeURIComponent(token)}`;
-//     const socket = new WebSocket(wsUrl);
-//     socketRef.current = socket;
-//     socket.onopen = () => { setSocketReady(true); if (selectedTeamRef.current) subscribeTeam(selectedTeamRef.current); if (selectedDmRef.current) subscribePrivate(selectedDmRef.current); };
-//     socket.onmessage = event => {
-//         try {
-//             const payload = JSON.parse(event.data);
-//             if (payload.type === 'message' && payload.message) {
-//                 const incomingTeamId = payload.teamId;
-//                 if (incomingTeamId === selectedTeamRef.current) {
-//                     setMessages(prev => { const exists = prev.some(item => item.id === payload.message.id); return exists ? prev : [...prev, payload.message]; });
-//                 }
-//                 if (!(viewModeRef.current === 'team' && incomingTeamId === selectedTeamRef.current)) {
-//                     setUnreadTeamById(prev => { const next = { ...prev, [incomingTeamId]: (prev[incomingTeamId] || 0) + 1 }; unreadTeamRef.current = next; persistUnreadState(next, unreadDmRef.current); return next; });
-//                 }
-//             } else if (payload.type === 'private_message' && payload.message) {
-//                 const incoming = payload.message;
-//                 const isCurrentThread = incoming.senderUsername === selectedDmRef.current || incoming.receiverUsername === selectedDmRef.current;
-//                 if (isCurrentThread) {
-//                     setDmMessages(prev => { const exists = prev.some(item => item.id === incoming.id); return exists ? prev : [...prev, incoming]; });
-//                 }
-//                 const otherUsername = incoming.senderUsername === user?.username ? incoming.receiverUsername : incoming.senderUsername;
-//                 upsertConversation(otherUsername, incoming.content, incoming.timestamp);
-//                 if (!(viewModeRef.current === 'direct' && selectedDmRef.current === otherUsername)) {
-//                     setUnreadDmByUser(prev => { const next = { ...prev, [otherUsername]: (prev[otherUsername] || 0) + 1 }; unreadDmRef.current = next; persistUnreadState(unreadTeamRef.current, next); return next; });
-//                 }
-//             }
-//         } catch (e) { setError('Invalid payload'); }
-//     };
-//     socket.onclose = () => setSocketReady(false);
-//     return () => { setSocketReady(false); socket.close(); };
-//   }, [token, user?.username]);
-
-//   useEffect(() => { subscribeTeam(selectedTeamId); }, [selectedTeamId, socketReady]);
-//   useEffect(() => { subscribePrivate(selectedDmUser); }, [selectedDmUser, socketReady]);
-//   useEffect(() => { if (!socketReady) return; teams.forEach(team => subscribeTeam(team.id)); }, [teams, socketReady]);
-//   useEffect(() => { if (!socketReady) return; dmConversations.forEach(conv => subscribePrivate(conv.otherUsername)); }, [dmConversations, socketReady]);
-//   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, dmMessages, viewMode]);
-  
-//   useEffect(() => {
-//     const handleOutsideClick = (event) => {
-//         const target = event.target;
-//         if (target.closest('[data-profile-card="true"]') || target.closest('[data-profile-trigger="true"]') || target.closest('[data-team-members-card="true"]') || target.closest('[data-team-members-trigger="true"]')) return;
-//         setActiveProfileCardId(''); setShowTeamMembersCard(false);
-//     };
-//     document.addEventListener('mousedown', handleOutsideClick);
-//     return () => document.removeEventListener('mousedown', handleOutsideClick);
-//   }, []);
-
-//   const activeMessages = viewMode === 'team' ? messages : dmMessages;
-//   const emptyInput = viewMode === 'team' ? !selectedTeamId : !selectedDmUser;
-
-//   // --- STYLING ---
-//   const glassStyle = {
-//     background: 'rgba(255, 255, 255, 0.7)',
-//     backdropFilter: 'blur(20px)',
-//     border: '1px solid rgba(255, 255, 255, 0.4)',
-//     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-//   };
-
-//   const styles = {
-//     shell: { maxWidth: '1240px', margin: '0 auto', padding: '20px', fontFamily: '-apple-system, sans-serif' },
-//     frame: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', height: '85vh' },
-//     card: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
-//     chatCard: { ...glassStyle, borderRadius: '24px', overflow: 'hidden', display: 'grid', gridTemplateRows: '80px 1fr 80px' },
-//     sideHeader: { padding: '20px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-//     toggleWrap: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
-//     toggleBtn: (active) => ({
-//       padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-//       backgroundColor: active ? '#007AFF' : 'rgba(0,0,0,0.05)',
-//       color: active ? '#fff' : '#555', fontWeight: '600', fontSize: '13px'
-//     }),
-//     sideScroll: { flex: 1, overflowY: 'auto', padding: '10px' },
-//     sideItem: (isActive) => ({
-//       display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', cursor: 'pointer',
-//       backgroundColor: isActive ? 'rgba(0, 122, 255, 0.1)' : 'transparent',
-//       transition: 'all 0.2s'
-//     }),
-//     avatar: (name) => ({
-//       width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-//       backgroundColor: avatarColor(name), color: '#fff', fontWeight: 'bold', fontSize: '14px'
-//     }),
-//     chatTop: { padding: '0 25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-//     thread: { overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column' },
-//     bubble: (mine) => ({
-//       padding: '12px 18px', maxWidth: '70%', borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-//       backgroundColor: mine ? '#007AFF' : 'white',
-//       color: mine ? '#fff' : '#000', marginBottom: '10px', alignSelf: mine ? 'flex-end' : 'flex-start',
-//       boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-//     }),
-//     inputWrap: { padding: '15px 25px', display: 'flex', gap: '10px', alignItems: 'center' },
-//   };
-
-//   if (loadingTeams) return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading chat...</div>;
-
-//   return (
-//     <div style={styles.shell}>
-//       <div style={styles.frame}>
-//         <div style={styles.card}>
-//           <div style={styles.sideHeader}>
-//             <div style={styles.toggleWrap}>
-//               <button style={styles.toggleBtn(viewMode === 'team')} onClick={() => setViewMode('team')}>Team</button>
-//               <button style={styles.toggleBtn(viewMode === 'direct')} onClick={() => setViewMode('direct')}>Direct</button>
-//             </div>
-//           </div>
-//           <div style={styles.sideScroll}>
-//             {viewMode === 'team' ? 
-//                 teams.map(team => (
-//                     <div key={team.id} style={styles.sideItem(team.id === selectedTeamId)} onClick={() => setSelectedTeamId(team.id)}>
-//                         <div style={styles.avatar(team.teamName)}>{getInitials(team.teamName)}</div>
-//                         <div><div style={{fontWeight: '600'}}>{team.teamName}</div><div style={{fontSize: '12px', opacity: 0.6}}>{team.competitionName}</div></div>
-//                     </div>
-//                 ))
-//             : 
-//                 dmConversations.map(conv => (
-//                     <div key={conv.otherUsername} style={styles.sideItem(conv.otherUsername === selectedDmUser)} onClick={() => setSelectedDmUser(conv.otherUsername)}>
-//                         <div style={styles.avatar(conv.otherUsername)}>{getInitials(conv.otherUsername)}</div>
-//                         <div style={{fontWeight: '600'}}>{conv.otherUsername}</div>
-//                     </div>
-//                 ))
-//             }
-//           </div>
-//         </div>
-
-//         <div style={styles.chatCard}>
-//           <div style={styles.chatTop}>
-//             <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-//                 <div style={styles.avatar(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}>
-//                     {getInitials(viewMode === 'team' ? selectedTeam?.teamName : selectedDmUser)}
-//                 </div>
-//                 <div>
-//                     {/* FIXED: CORRECT NAME DISPLAY IN HEADER */}
-//                     <div style={{fontWeight: '700', fontSize: '18px'}}>
-//                         {viewMode === 'team' ? (selectedTeam?.teamName || 'Select a Team') : (selectedDmUser || 'Select a Chat')}
-//                     </div>
-//                     <div style={{fontSize: '12px', color: '#86868b'}}>
-//                         {viewMode === 'team' ? selectedTeam?.competitionName : 'Private Message'}
-//                     </div>
-//                 </div>
-//             </div>
-//             <div style={{color: socketReady ? '#34C759' : '#FF9500', fontSize: '12px', fontWeight: 'bold'}}>
-//                 {socketReady ? '● Live connected' : '● Reconnecting...'}
-//             </div>
-//           </div>
-
-//           <div style={styles.thread}>
-//             {activeMessages.map(msg => (
-//                 <div key={msg.id} style={{display: 'flex', flexDirection: 'column', alignItems: msg.senderUsername === user?.username ? 'flex-end' : 'flex-start'}}>
-//                     {msg.senderUsername !== user?.username && <span style={{fontSize: '10px', opacity: 0.5, marginLeft: '10px', marginBottom: '2px'}}>{msg.senderUsername}</span>}
-//                     <div style={styles.bubble(msg.senderUsername === user?.username)}>{msg.content}</div>
-//                 </div>
-//             ))}
-//             <div ref={endRef} />
-//           </div>
-
-//           <div style={styles.inputWrap}>
-//             <input 
-//                 style={{flex: 1, padding: '12px 20px', borderRadius: '999px', border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(255,255,255,0.5)', outline: 'none'}}
-//                 placeholder="Type a message..." value={draft} onChange={(e) => setDraft(e.target.value)} 
-//                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-//             />
-//             <button style={{padding: '10px 24px', borderRadius: '999px', border: 'none', backgroundColor: '#007AFF', color: 'white', fontWeight: '600', cursor: 'pointer'}} onClick={handleSend}>Send</button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-

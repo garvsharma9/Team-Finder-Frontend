@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#c9d7e6" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)" transform="translate(32 32)">
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#15c993" transform="rotate(15)"/>
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#37c9f7" transform="rotate(75)"/>
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#4520b7" transform="rotate(135)"/>
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#ff7a00" transform="rotate(195)"/>
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#27b5f2" transform="rotate(255)"/>
+    <path d="M0 -3 C8 -14 17 -18 24 -15 C28 -13 29 -7 26 -3 C22 3 13 8 2 9 C-2 5 -2 1 0 -3 Z" fill="#77e5ef" transform="rotate(315)"/>
+    <circle r="3.4" fill="#ffffff"/>
+  </g>
+</svg>

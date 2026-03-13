@@ -1,303 +1,34 @@
-// import React, { useState, useEffect, useContext } from 'react';
-// import { AuthContext } from '../context/AuthContext';
-
-// export default function Feed() {
-//   const { user, token } = useContext(AuthContext);
-  
-//   const [posts, setPosts] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-
-//   // Post Form State
-//   const [isExpanded, setIsExpanded] = useState(false); // Controls if the form is open
-//   const [formData, setFormData] = useState({
-//     competitionName: '',
-//     competitionDate: '',
-//     position: '',
-//     experienceTag: 'Beginner',
-//     teamName: ''
-//   });
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-
-//   const fetchPosts = async () => {
-//     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
-//         headers: { 'Authorization': `Bearer ${token}` }
-//       });
-//       if (!response.ok) throw new Error('Failed to fetch posts');
-//       const data = await response.json();
-//       setPosts(data.reverse()); 
-//     } catch (err) {
-//       setError('Could not load feed. Is the server running?');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (token) fetchPosts();
-//   }, [token]);
-
-//   const handleCreatePost = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-
-//     const postPayload = { ...formData, username: user.username };
-
-//     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/add-post', {
-//         method: 'POST',
-//         headers: { 
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${token}`
-//         },
-//         body: JSON.stringify(postPayload)
-//       });
-
-//       if (response.ok) {
-//         setFormData({ competitionName: '', competitionDate: '', position: '', experienceTag: 'Beginner', teamName: '' });
-//         setIsExpanded(false);
-//         fetchPosts();
-//       } else {
-//         alert('Failed to create post.');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       alert('An error occurred while posting.');
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   const handleRequestJoin = async (postId) => {
-//     try {
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`, {
-//         method: 'POST',
-//         headers: { 'Authorization': `Bearer ${token}` }
-//       });
-
-//       if (response.ok) {
-//         setPosts((prevPosts) => 
-//           prevPosts.map(post => {
-//             if (post.id === postId) {
-//               const updatedRequests = post.requestedUsernames ? [...post.requestedUsernames, user.username] : [user.username];
-//               return { ...post, requestedUsernames: updatedRequests };
-//             }
-//             return post;
-//           })
-//         );
-//       } else {
-//         alert('Could not send request. You may have already requested to join.');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   // Injecting CSS for hover states and transitions
-//   const styleSheet = `
-//     .post-card {
-//       background-color: #fff;
-//       border-radius: 10px;
-//       margin-bottom: 16px;
-//       border: 1px solid #e0e0e0;
-//       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-//       overflow: hidden;
-//     }
-//     .post-action-btn {
-//       flex: 1;
-//       padding: 12px;
-//       background: transparent;
-//       border: none;
-//       border-radius: 4px;
-//       color: #666;
-//       font-weight: 600;
-//       font-size: 14px;
-//       cursor: pointer;
-//       transition: background-color 0.2s;
-//     }
-//     .post-action-btn:hover:not(:disabled) {
-//       background-color: #ebebeb;
-//     }
-//     .form-input {
-//       width: 100%;
-//       padding: 12px;
-//       margin-bottom: 12px;
-//       border: 1px solid #ccc;
-//       border-radius: 6px;
-//       box-sizing: border-box;
-//       font-size: 14px;
-//     }
-//     .form-input:focus {
-//       outline: none;
-//       border-color: #0a66c2;
-//     }
-//   `;
-
-//   const styles = {
-//     container: { maxWidth: '580px', margin: '20px auto', padding: '0 15px', fontFamily: 'Arial, sans-serif' },
-    
-//     // Create Post Box Styles
-//     createBox: { backgroundColor: '#fff', padding: '16px', borderRadius: '10px', border: '1px solid #e0e0e0', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-//     createHeader: { display: 'flex', gap: '10px', alignItems: 'center' },
-//     avatar: { width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#0a66c2', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold', flexShrink: 0 },
-//     dummyInput: { flex: 1, padding: '14px 20px', borderRadius: '30px', border: '1px solid #b2b2b2', backgroundColor: '#fff', color: '#666', cursor: 'pointer', fontWeight: '500', textAlign: 'left', transition: 'background-color 0.2s' },
-//     formExpanded: { marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #ebebeb' },
-//     btnPrimary: { backgroundColor: '#0a66c2', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', cursor: 'pointer', fontWeight: 'bold', float: 'right' },
-    
-//     // Post Styles
-//     postHeader: { display: 'flex', gap: '12px', padding: '16px 16px 8px 16px', alignItems: 'flex-start' },
-//     postAuthor: { fontSize: '15px', fontWeight: 'bold', color: '#000', margin: '0 0 2px 0' },
-//     postMeta: { fontSize: '12px', color: '#666', margin: 0 },
-//     postBody: { padding: '0 16px 16px 16px' },
-//     postTitle: { fontSize: '18px', fontWeight: 'bold', color: '#000', margin: '10px 0 8px 0' },
-//     badge: { display: 'inline-block', backgroundColor: '#e8f3ff', color: '#0a66c2', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', marginBottom: '12px' },
-//     detailRow: { margin: '0 0 8px 0', fontSize: '14px', color: '#333' },
-//     actionBar: { display: 'flex', padding: '4px 8px', borderTop: '1px solid #ebebeb' }
-//   };
-
-//   if (!user) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Please log in.</div>;
-
-//   return (
-//     <div style={styles.container}>
-//       <style>{styleSheet}</style>
-
-//       {/* --- CREATE POST BOX (LinkedIn Style) --- */}
-//       <div style={styles.createBox}>
-//         <div style={styles.createHeader}>
-//           <div style={styles.avatar}>{user.username.charAt(0).toUpperCase()}</div>
-//           <button 
-//             style={styles.dummyInput} 
-//             onClick={() => setIsExpanded(true)}
-//             onMouseOver={(e) => e.target.style.backgroundColor = '#f3f2ef'}
-//             onMouseOut={(e) => e.target.style.backgroundColor = '#fff'}
-//           >
-//             Start a team requirement...
-//           </button>
-//         </div>
-
-//         {isExpanded && (
-//           <div style={styles.formExpanded}>
-//             <form onSubmit={handleCreatePost}>
-//               <input className="form-input" type="text" placeholder="Competition / Hackathon Name" required value={formData.competitionName} onChange={e => setFormData({...formData, competitionName: e.target.value})} />
-//               <div style={{ display: 'flex', gap: '10px' }}>
-//                 <input className="form-input" type="date" required value={formData.competitionDate} onChange={e => setFormData({...formData, competitionDate: e.target.value})} />
-//                 <input className="form-input" type="text" placeholder="Team Name (e.g., The Bug Smashers)" required value={formData.teamName} onChange={e => setFormData({...formData, teamName: e.target.value})} />
-//               </div>
-//               <div style={{ display: 'flex', gap: '10px' }}>
-//                 <input className="form-input" type="text" placeholder="Position Needed (e.g., Backend Dev)" required value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} />
-//                 <select className="form-input" value={formData.experienceTag} onChange={e => setFormData({...formData, experienceTag: e.target.value})}>
-//                   <option value="Beginner">Beginner</option>
-//                   <option value="Intermediate">Intermediate</option>
-//                   <option value="Pro">Pro</option>
-//                 </select>
-//               </div>
-//               <div style={{ overflow: 'hidden' }}>
-//                 <button type="button" onClick={() => setIsExpanded(false)} style={{ ...styles.btnPrimary, backgroundColor: 'transparent', color: '#666', marginRight: '10px' }}>Cancel</button>
-//                 <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
-//                   {isSubmitting ? 'Posting...' : 'Post Requirement'}
-//                 </button>
-//               </div>
-//             </form>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* --- FEED TIMELINE --- */}
-//       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-//         <hr style={{ flex: 1, border: 'none', borderTop: '1px solid #ccc' }} />
-//         <span style={{ fontSize: '12px', color: '#666' }}>Sort by: <strong>Top</strong></span>
-//       </div>
-
-//       {loading && <p style={{ textAlign: 'center', color: '#666' }}>Loading feed...</p>}
-//       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-
-//       {posts.length > 0 ? (
-//         posts.map((post) => {
-//           const isOwner = post.username === user.username;
-//           const hasRequested = post.requestedUsernames && post.requestedUsernames.includes(user.username);
-//           const isAccepted = post.acceptedUsernames && post.acceptedUsernames.includes(user.username);
-
-//           return (
-//             <div key={post.id} className="post-card">
-              
-//               <div style={styles.postHeader}>
-//                 <div style={{ ...styles.avatar, width: '40px', height: '40px', fontSize: '16px', backgroundColor: '#44719b' }}>
-//                   {post.username.charAt(0).toUpperCase()}
-//                 </div>
-//                 <div>
-//                   <h4 style={styles.postAuthor}>{post.username}</h4>
-//                   <p style={styles.postMeta}>Recruiting for {post.competitionName} • {post.competitionDate}</p>
-//                 </div>
-//               </div>
-
-//               <div style={styles.postBody}>
-//                 <h3 style={styles.postTitle}>Looking for: {post.position}</h3>
-//                 <span style={styles.badge}>{post.experienceTag} Level</span>
-                
-//                 <p style={styles.detailRow}><strong>Team Name:</strong> {post.teamName}</p>
-//                 <p style={styles.detailRow}><strong>Current Team Size:</strong> {(post.acceptedUsernames?.length || 0) + 1}</p>
-//               </div>
-
-//               <div style={styles.actionBar}>
-//                 {isOwner ? (
-//                   <button className="post-action-btn" disabled style={{ color: '#0a66c2', fontWeight: 'bold' }}>
-//                     📊 Manage Responses in My Teams
-//                   </button>
-//                 ) : isAccepted ? (
-//                   <button className="post-action-btn" disabled style={{ color: '#057642', fontWeight: 'bold' }}>
-//                     ✓ You are in this Team
-//                   </button>
-//                 ) : hasRequested ? (
-//                   <button className="post-action-btn" disabled style={{ color: '#666' }}>
-//                     🕒 Request Sent
-//                   </button>
-//                 ) : (
-//                   <button className="post-action-btn" onClick={() => handleRequestJoin(post.id)}>
-//                     ➕ Request to Join Team
-//                   </button>
-//                 )}
-//               </div>
-//             </div>
-//           );
-//         })
-//       ) : (
-//         !loading && <p style={{ textAlign: 'center', color: '#666' }}>No posts yet. Be the first to start a team!</p>
-//       )}
-//     </div>
-//   );
-// }
-
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { themePalette } from '../theme/palette';
 
 export default function Feed() {
   const { user, token } = useContext(AuthContext);
-  
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Post Form State
-  const [isExpanded, setIsExpanded] = useState(false); 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     competitionName: '',
     competitionDate: '',
     position: '',
     experienceTag: 'Beginner',
-    teamName: ''
+    teamName: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // --- LOGIC PRESERVED EXACTLY ---
+  const colors = themePalette;
+
   const fetchPosts = async () => {
     try {
       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!response.ok) throw new Error('Failed to fetch posts');
+
       const data = await response.json();
-      setPosts(data.reverse()); 
+      setPosts(data.reverse());
     } catch (err) {
       setError('Could not load feed. Is the server running?');
     } finally {
@@ -306,24 +37,35 @@ export default function Feed() {
   };
 
   useEffect(() => {
-    if (token) fetchPosts();
+    if (token) {
+      fetchPosts();
+    }
   }, [token]);
 
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
+  const handleCreatePost = async (event) => {
+    event.preventDefault();
     setIsSubmitting(true);
+
     const postPayload = { ...formData, username: user.username };
+
     try {
       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/add-post', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(postPayload)
+        body: JSON.stringify(postPayload),
       });
+
       if (response.ok) {
-        setFormData({ competitionName: '', competitionDate: '', position: '', experienceTag: 'Beginner', teamName: '' });
+        setFormData({
+          competitionName: '',
+          competitionDate: '',
+          position: '',
+          experienceTag: 'Beginner',
+          teamName: '',
+        });
         setIsExpanded(false);
         fetchPosts();
       } else {
@@ -339,18 +81,24 @@ export default function Feed() {
 
   const handleRequestJoin = async (postId) => {
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetch(
+        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       if (response.ok) {
-        setPosts((prevPosts) => 
-          prevPosts.map(post => {
-            if (post.id === postId) {
-              const updatedRequests = post.requestedUsernames ? [...post.requestedUsernames, user.username] : [user.username];
-              return { ...post, requestedUsernames: updatedRequests };
-            }
-            return post;
+        setPosts((previousPosts) =>
+          previousPosts.map((post) => {
+            if (post.id !== postId) return post;
+
+            const updatedRequests = post.requestedUsernames
+              ? [...post.requestedUsernames, user.username]
+              : [user.username];
+
+            return { ...post, requestedUsernames: updatedRequests };
           })
         );
       } else {
@@ -361,170 +109,286 @@ export default function Feed() {
     }
   };
 
-  // --- GLASSY CSS INJECTION ---
   const styleSheet = `
-    .post-card {
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 24px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-      overflow: hidden;
-      transition: transform 0.3s ease;
-    }
-    .post-card:hover { transform: translateY(-4px); }
-
-    .post-action-btn {
-      flex: 1;
-      padding: 14px;
-      background: rgba(0, 122, 255, 0.1);
-      border: 1px solid rgba(0, 122, 255, 0.1);
-      border-radius: 14px;
-      color: #007AFF;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(10px);
-    }
-    .post-action-btn:hover:not(:disabled) {
-      background: rgba(0, 122, 255, 0.2);
-      transform: scale(1.02);
+    .feed-page {
+      max-width: 660px;
+      margin: 32px auto;
+      padding: 0 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .form-input {
+    .feed-card {
+      background: ${colors.glass};
+      border: 1px solid ${colors.border};
+      border-radius: 28px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: ${colors.shadow};
+    }
+
+    .feed-create-box {
+      padding: 22px;
+      margin-bottom: 28px;
+    }
+
+    .feed-create-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .feed-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc);
+      box-shadow: 0 14px 28px rgba(79, 140, 255, 0.22);
+    }
+
+    .feed-trigger {
       width: 100%;
-      padding: 14px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      box-sizing: border-box;
-      font-size: 14px;
-      background: rgba(255, 255, 255, 0.5);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-input:focus { border-color: #007AFF; background: rgba(255, 255, 255, 0.8); }
-    
-    .btn-cancel {
-      padding: 10px 20px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,0,0,0.1);
-      background: transparent;
-      color: #666;
+      border: 1px solid ${colors.border};
+      border-radius: 18px;
+      background: ${colors.mutedSurface};
+      color: ${colors.textMain};
+      padding: 15px 18px;
+      font-weight: 700;
+      text-align: left;
       cursor: pointer;
-      font-weight: 600;
-      margin-right: 10px;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .feed-trigger:hover {
+      transform: translateY(-1px);
+      background: ${colors.glassStrong};
+    }
+
+    .feed-form {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid ${colors.border};
+    }
+
+    .feed-input,
+    .feed-select {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid ${colors.border};
+      background: ${colors.mutedSurface};
+      color: ${colors.textMain};
+      outline: none;
+      padding: 14px 16px;
+      font-size: 14px;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .feed-input:focus,
+    .feed-select:focus {
+      border-color: ${colors.blue};
+      background: ${colors.glassStrong};
+    }
+
+    .feed-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .feed-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .feed-button,
+    .feed-button-secondary {
+      border-radius: 16px;
+      padding: 11px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .feed-button {
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, ${colors.blueStrong}, ${colors.blue});
+      box-shadow: 0 14px 28px rgba(79, 140, 255, 0.22);
+    }
+
+    .feed-button-secondary {
+      border: 1px solid ${colors.border};
+      color: ${colors.textSecondary};
+      background: ${colors.glassSoft};
+    }
+
+    .feed-post {
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .feed-post:hover {
+      transform: translateY(-5px);
+      box-shadow: ${colors.shadowStrong};
+    }
+
+    .feed-post-header {
+      display: flex;
+      gap: 14px;
+      padding: 20px 20px 10px;
+      align-items: center;
+    }
+
+    .feed-post-body {
+      padding: 0 20px 20px;
+    }
+
+    .feed-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: ${colors.accentGhost};
+      color: ${colors.accent};
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .feed-post-footer {
+      padding: 18px 20px 20px;
+      background: ${colors.glassSoft};
+      border-top: 1px solid ${colors.border};
+    }
+
+    .feed-post-action {
+      width: 100%;
+      border: 1px solid ${colors.border};
+      border-radius: 16px;
+      padding: 13px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      background: ${colors.primaryGhost};
+      color: ${colors.blue};
+      transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .feed-post-action:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: ${colors.blue};
+      color: #fff;
+    }
+
+    .feed-post-action:disabled {
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 640px) {
+      .feed-row {
+        grid-template-columns: 1fr;
+      }
+
+      .feed-actions {
+        flex-direction: column-reverse;
+      }
     }
   `;
 
-  const styles = {
-    container: { maxWidth: '620px', margin: '30px auto', padding: '0 20px', fontFamily: '-apple-system, sans-serif' },
-    
-    // Create Post Glass Box
-    createBox: { 
-      background: 'rgba(255, 255, 255, 0.7)', 
-      backdropFilter: 'blur(25px)',
-      padding: '20px', 
-      borderRadius: '24px', 
-      border: '1px solid rgba(255, 255, 255, 0.5)', 
-      marginBottom: '30px', 
-      boxShadow: '0 10px 30px rgba(0,0,0,0.04)' 
-    },
-    createHeader: { display: 'flex', gap: '15px', alignItems: 'center' },
-    avatar: { 
-      width: '45px', height: '45px', borderRadius: '15px', 
-      background: 'linear-gradient(135deg, #007AFF, #00C7FC)', 
-      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      fontSize: '18px', fontWeight: 'bold', flexShrink: 0,
-      boxShadow: '0 4px 12px rgba(0,122,255,0.3)'
-    },
-    dummyInput: { 
-      flex: 1, padding: '15px 25px', borderRadius: '18px', 
-      border: '1px solid rgba(255, 255, 255, 0.4)', 
-      background: 'rgba(255, 255, 255, 0.4)', 
-      color: '#1D1D1F', cursor: 'pointer', fontWeight: '600', 
-      textAlign: 'left', transition: 'all 0.3s ease' 
-    },
-    formExpanded: { marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.3)' },
-    btnPrimary: { 
-      background: 'rgba(0, 122, 255, 0.8)', color: '#fff', border: 'none', 
-      padding: '12px 28px', borderRadius: '16px', cursor: 'pointer', 
-      fontWeight: 'bold', float: 'right', backdropFilter: 'blur(10px)',
-      boxShadow: '0 4px 15px rgba(0,122,255,0.3)'
-    },
-    
-    // Post Item Styles
-    postHeader: { display: 'flex', gap: '15px', padding: '20px 20px 10px 20px', alignItems: 'center' },
-    postAuthor: { fontSize: '16px', fontWeight: '700', color: '#1D1D1F', margin: 0 },
-    postMeta: { fontSize: '13px', color: '#86868B', margin: 0 },
-    postBody: { padding: '0 20px 20px 20px' },
-    postTitle: { fontSize: '20px', fontWeight: '800', color: '#1D1D1F', margin: '15px 0 10px 0' },
-    badge: { 
-      display: 'inline-block', background: 'rgba(255, 149, 0, 0.15)', color: '#FF9500', 
-      padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', marginBottom: '15px' 
-    },
-    detailRow: { margin: '0 0 10px 0', fontSize: '15px', color: '#1D1D1F', display: 'flex', gap: '8px' },
-    actionBar: { display: 'flex', padding: '15px 20px', background: 'rgba(255, 255, 255, 0.2)', borderTop: '1px solid rgba(255, 255, 255, 0.3)' }
-  };
-
-  if (!user) return <div style={{ textAlign: 'center', marginTop: '50px', color: '#86868B' }}>Please log in to see the feed.</div>;
+  if (!user) {
+    return <div style={{ textAlign: 'center', marginTop: '50px', color: colors.textSecondary }}>Please log in to see the feed.</div>;
+  }
 
   return (
-    <div style={styles.container}>
+    <div className="feed-page">
       <style>{styleSheet}</style>
 
-      {/* --- GLASSY CREATE POST BOX --- */}
-      <div style={styles.createBox}>
-        <div style={styles.createHeader}>
-          <div style={styles.avatar}>{user.username.charAt(0).toUpperCase()}</div>
-          <button 
-            style={styles.dummyInput} 
-            onClick={() => setIsExpanded(true)}
-            onMouseOver={(e) => { e.target.style.background = 'rgba(255,255,255,0.8)'; e.target.style.transform = 'scale(1.01)'; }}
-            onMouseOut={(e) => { e.target.style.background = 'rgba(255,255,255,0.4)'; e.target.style.transform = 'scale(1)'; }}
-          >
+      <div className="feed-card feed-create-box">
+        <div className="feed-create-header">
+          <div className="feed-avatar">{user.username.charAt(0).toUpperCase()}</div>
+          <button type="button" className="feed-trigger" onClick={() => setIsExpanded(true)}>
             Looking for teammates? Start a post...
           </button>
         </div>
 
-        {isExpanded && (
-          <div style={styles.formExpanded}>
-            <form onSubmit={handleCreatePost}>
-              <input className="form-input" type="text" placeholder="Competition / Hackathon Name" required value={formData.competitionName} onChange={e => setFormData({...formData, competitionName: e.target.value})} />
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <input className="form-input" type="date" required value={formData.competitionDate} onChange={e => setFormData({...formData, competitionDate: e.target.value})} />
-                <input className="form-input" type="text" placeholder="Team Name" required value={formData.teamName} onChange={e => setFormData({...formData, teamName: e.target.value})} />
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <input className="form-input" type="text" placeholder="Position Needed (e.g., Designer)" required value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} />
-                <select className="form-input" value={formData.experienceTag} onChange={e => setFormData({...formData, experienceTag: e.target.value})}>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Pro">Pro</option>
-                </select>
-              </div>
-              <div style={{ overflow: 'hidden', marginTop: '10px' }}>
-                <button type="button" onClick={() => setIsExpanded(false)} className="btn-cancel">Cancel</button>
-                <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
-                  {isSubmitting ? 'Publishing...' : 'Post Requirement'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+        {isExpanded ? (
+          <form className="feed-form" onSubmit={handleCreatePost}>
+            <input
+              className="feed-input"
+              type="text"
+              placeholder="Competition / Hackathon Name"
+              required
+              value={formData.competitionName}
+              onChange={(event) => setFormData({ ...formData, competitionName: event.target.value })}
+            />
+
+            <div className="feed-row">
+              <input
+                className="feed-input"
+                type="date"
+                required
+                value={formData.competitionDate}
+                onChange={(event) => setFormData({ ...formData, competitionDate: event.target.value })}
+              />
+              <input
+                className="feed-input"
+                type="text"
+                placeholder="Team Name"
+                required
+                value={formData.teamName}
+                onChange={(event) => setFormData({ ...formData, teamName: event.target.value })}
+              />
+            </div>
+
+            <div className="feed-row">
+              <input
+                className="feed-input"
+                type="text"
+                placeholder="Position Needed (e.g., Designer)"
+                required
+                value={formData.position}
+                onChange={(event) => setFormData({ ...formData, position: event.target.value })}
+              />
+              <select
+                className="feed-select"
+                value={formData.experienceTag}
+                onChange={(event) => setFormData({ ...formData, experienceTag: event.target.value })}
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Pro">Pro</option>
+              </select>
+            </div>
+
+            <div className="feed-actions">
+              <button type="button" className="feed-button-secondary" onClick={() => setIsExpanded(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="feed-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Publishing...' : 'Post Requirement'}
+              </button>
+            </div>
+          </form>
+        ) : null}
       </div>
 
-      {/* --- FEED TIMELINE --- */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', opacity: 0.7 }}>
-        <hr style={{ flex: 1, border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)' }} />
-        <span style={{ fontSize: '13px', fontWeight: '600', color: '#86868B' }}>SORT BY: <strong style={{color: '#007AFF'}}>LATEST</strong></span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', opacity: 0.78 }}>
+        <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${colors.border}` }} />
+        <span style={{ fontSize: '13px', fontWeight: '700', color: colors.textSecondary }}>
+          SORT BY: <strong style={{ color: colors.blue }}>LATEST</strong>
+        </span>
       </div>
 
-      {loading && <p style={{ textAlign: 'center', color: '#86868B' }}>Fetching requirements...</p>}
-      {error && <p style={{ color: '#FF3B30', textAlign: 'center' }}>{error}</p>}
+      {loading ? <p style={{ textAlign: 'center', color: colors.textSecondary }}>Fetching requirements...</p> : null}
+      {error ? <p style={{ color: colors.red, textAlign: 'center' }}>{error}</p> : null}
 
       {posts.length > 0 ? (
         posts.map((post) => {
@@ -532,51 +396,82 @@ export default function Feed() {
           const hasRequested = post.requestedUsernames && post.requestedUsernames.includes(user.username);
           const isAccepted = post.acceptedUsernames && post.acceptedUsernames.includes(user.username);
 
+          let actionLabel = 'Request to Join Team';
+          let actionStyle = {};
+          let disabled = false;
+
+          if (isOwner) {
+            actionLabel = 'Manage via Dashboard';
+            actionStyle = { background: colors.glassSoft, color: colors.textSecondary, borderColor: 'transparent' };
+            disabled = true;
+          } else if (isAccepted) {
+            actionLabel = 'Member';
+            actionStyle = { background: colors.successGhost, color: colors.green, borderColor: 'transparent' };
+            disabled = true;
+          } else if (hasRequested) {
+            actionLabel = 'Pending Review';
+            actionStyle = { background: colors.accentGhost, color: colors.accent, borderColor: 'transparent' };
+            disabled = true;
+          }
+
           return (
-            <div key={post.id} className="post-card">
-              <div style={styles.postHeader}>
-                <div style={{ ...styles.avatar, width: '42px', height: '42px', borderRadius: '12px', fontSize: '16px', background: 'rgba(0,122,255,0.1)', color: '#007AFF' }}>
+            <div key={post.id} className="feed-card feed-post">
+              <div className="feed-post-header">
+                <div
+                  className="feed-avatar"
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '14px',
+                    background: colors.primaryGhost,
+                    color: colors.blue,
+                    boxShadow: 'none',
+                  }}
+                >
                   {post.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h4 style={styles.postAuthor}>{post.username}</h4>
-                  <p style={styles.postMeta}>📅 {post.competitionDate} • {post.competitionName}</p>
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: colors.textMain }}>{post.username}</h4>
+                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', color: colors.textSecondary }}>
+                    📅 {post.competitionDate} • {post.competitionName}
+                  </p>
                 </div>
               </div>
 
-              <div style={styles.postBody}>
-                <h3 style={styles.postTitle}>Role: {post.position}</h3>
-                <span style={styles.badge}>{post.experienceTag} Experience</span>
-                
-                <p style={styles.detailRow}><strong style={{color: '#007AFF'}}>Team:</strong> {post.teamName}</p>
-                <p style={styles.detailRow}><strong style={{color: '#007AFF'}}>Current Size:</strong> <span style={{fontWeight: '700'}}>{(post.acceptedUsernames?.length || 0) + 1}</span> members</p>
+              <div className="feed-post-body">
+                <h3 style={{ margin: '4px 0 12px', fontSize: '22px', fontWeight: '800', color: colors.textMain }}>
+                  Role: {post.position}
+                </h3>
+                <span className="feed-pill">{post.experienceTag} Experience</span>
+
+                <p style={{ margin: '0 0 10px 0', color: colors.textMain }}>
+                  <strong style={{ color: colors.blue }}>Team:</strong> {post.teamName}
+                </p>
+                <p style={{ margin: 0, color: colors.textMain }}>
+                  <strong style={{ color: colors.blue }}>Current Size:</strong>{' '}
+                  <span style={{ fontWeight: '800' }}>{(post.acceptedUsernames?.length || 0) + 1}</span> members
+                </p>
               </div>
 
-              <div style={styles.actionBar}>
-                {isOwner ? (
-                  <button className="post-action-btn" disabled style={{ color: '#86868B', background: 'rgba(0,0,0,0.05)', border: 'none' }}>
-                    📊 Manage via Dashboard
-                  </button>
-                ) : isAccepted ? (
-                  <button className="post-action-btn" disabled style={{ color: '#34C759', background: 'rgba(52, 199, 89, 0.1)', border: 'none' }}>
-                    ✓ Member
-                  </button>
-                ) : hasRequested ? (
-                  <button className="post-action-btn" disabled style={{ color: '#FF9500', background: 'rgba(255, 149, 0, 0.1)', border: 'none' }}>
-                    🕒 Pending Review
-                  </button>
-                ) : (
-                  <button className="post-action-btn" onClick={() => handleRequestJoin(post.id)}>
-                    ➕ Request to Join Team
-                  </button>
-                )}
+              <div className="feed-post-footer">
+                <button
+                  type="button"
+                  className="feed-post-action"
+                  style={actionStyle}
+                  disabled={disabled}
+                  onClick={() => handleRequestJoin(post.id)}
+                >
+                  {actionLabel}
+                </button>
               </div>
             </div>
           );
         })
-      ) : (
-        !loading && <p style={{ textAlign: 'center', color: '#86868B', marginTop: '40px' }}>No active team requirements. Be the first!</p>
-      )}
+      ) : !loading ? (
+        <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '40px' }}>
+          No active team requirements. Be the first!
+        </p>
+      ) : null}
     </div>
   );
 }
