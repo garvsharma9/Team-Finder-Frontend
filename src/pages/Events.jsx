@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { themePalette } from '../theme/palette';
 
 export default function Events() {
   const { user, token } = useContext(AuthContext);
@@ -89,7 +88,7 @@ export default function Events() {
     if (!window.confirm('Are you sure you want to delete this official event?')) return;
 
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space0/events/delete/${eventId}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,6 +112,7 @@ export default function Events() {
     };
   };
 
+  // --- REWRITTEN GLASSY UI STYLES ---
   const styleSheet = `
     .events-page {
       max-width: 920px;
@@ -452,6 +452,34 @@ export default function Events() {
                   </p>
                 </div>
               </div>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+                
+                <button 
+                  onClick={() => handleLikeEvent(event.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    event.like?.includes(user?.username) 
+                      ? 'bg-blue-50 text-blue-600' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>{event.like?.length || 0}</span>
+                </button>
+
+                <button 
+                  onClick={() => handleDislikeEvent(event.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    event.dislike?.includes(user?.username) 
+                      ? 'bg-red-50 text-red-600' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span>{event.dislike?.length || 0}</span>
+                </button>
+
+              </div>
+
 
               <div className="events-card-footer">
                 <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '700' }}>

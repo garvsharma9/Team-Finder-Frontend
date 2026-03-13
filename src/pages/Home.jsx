@@ -138,7 +138,7 @@
 //   );
 // }
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -316,51 +316,36 @@ const eventBullets = [
 //   return (
 
 export default function Index() {
-  // Sidebar defaults to open (false = not collapsed)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  useEffect(() => {
-    // Listen for the toggle event from Sidebar.jsx
-    const handleSidebarToggle = (e) => setIsSidebarCollapsed(e.detail);
-    
-    window.addEventListener('sidebar-toggle', handleSidebarToggle);
-    return () => window.removeEventListener('sidebar-toggle', handleSidebarToggle);
-  }, []);
-
   return (
     <div className="tf-body min-h-screen w-full overflow-x-hidden bg-slate-50">
       <style>{styleSheet}</style>
 
       {/* ===== NAVBAR ===== */}
-      {/* <nav className="tf-glass fixed top-0 left-0 right-0 z-50 border-b border-white/10"> */}
-
-
-      {/* ===== NAVBAR ===== */}
-      <nav className={`tf-glass fixed top-0 right-0 z-50 border-b border-white/10 transition-all duration-400 ease-in-out ${
-        isSidebarCollapsed ? 'left-[100px]' : 'left-[280px]'
-      }`}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="tf-display flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-lg shadow-md">
-              T
+      <div className="px-4 pt-4 sm:px-6 lg:px-8">
+        <nav className="tf-glass relative z-40 mx-auto max-w-7xl rounded-[28px] border border-white/10">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="tf-display flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-lg shadow-md">
+                T
+              </div>
+              <span className="tf-display text-xl font-bold text-slate-800">
+                Team<span className="text-blue-600">Finder</span>
+              </span>
+            </Link>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100">
+                Log in
+              </Link>
+              <Link to="/signup" className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5">
+                Sign up
+              </Link>
             </div>
-            <span className="tf-display text-xl font-bold text-slate-800">
-              Team<span className="text-blue-600">Finder</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100">
-              Log in
-            </Link>
-            <Link to="/signup" className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5">
-              Sign up
-            </Link>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* ===== HERO SECTION ===== */}
-      <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
+      <section className="relative flex min-h-[calc(100svh-80px)] items-center justify-center overflow-hidden pt-6">
         <div className="absolute inset-0 tf-hero-gradient opacity-90" />
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10 mix-blend-overlay"
