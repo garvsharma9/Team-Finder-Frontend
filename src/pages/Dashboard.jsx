@@ -401,7 +401,6 @@ export default function Dashboard() {
     bio: user?.bio || '',
     branch: user?.branch || '',
     college: user?.college || '',
-    experienceTag: user?.experienceTag || 'Beginner',
   });
   const [newSkill, setNewSkill] = useState('');
 
@@ -860,17 +859,6 @@ export default function Dashboard() {
                 value={formData.college}
                 onChange={(event) => setFormData({ ...formData, college: event.target.value })}
               />
-
-              <label className="dashboard-label">Expertise Level</label>
-              <select
-                className="dashboard-select"
-                value={formData.experienceTag}
-                onChange={(event) => setFormData({ ...formData, experienceTag: event.target.value })}
-              >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Pro">Pro</option>
-              </select>
             </div>
           )}
         </div>
