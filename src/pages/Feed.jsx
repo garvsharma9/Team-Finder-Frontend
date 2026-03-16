@@ -500,7 +500,7 @@ export default function Feed() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/feed', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -590,16 +590,16 @@ export default function Feed() {
 
   // --- NEW: Handle Delete Post ---
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this requirement?")) return;
+    if (!window.confirm("Are you sure you want to remove this requirement from the team feed? Your team and chat will stay active.")) return;
 
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-post/${postId}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-feed-post/${postId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
-        setPosts(posts.filter(p => p.id !== postId)); 
+        setPosts((previousPosts) => previousPosts.filter((post) => post.id !== postId));
       } else {
         alert("Failed to delete post.");
       }

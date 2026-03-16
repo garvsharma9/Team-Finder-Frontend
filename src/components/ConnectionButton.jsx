@@ -1,9 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { UserPlus, Clock, Check, X, MessageSquare } from 'lucide-react';
+import { UserPlus, Clock, Check, X, MessageSquare, UserMinus } from 'lucide-react';
 
-export default function ConnectionButton({ profileUser }) {
+export default function ConnectionButton({
+  profileUser,
+  relationshipHint = null,
+  showRemove = false,
+  onActionComplete,
+}) {
   const { user, token, updateUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -12,11 +17,30 @@ export default function ConnectionButton({ profileUser }) {
   if (!user || !profileUser || user.username === profileUser.username) return null;
 
   // Determine the current relationship state
-  const isConnected = user.connections?.includes(profileUser.username);
-  const hasSentRequest = user.connectionRequestsSent?.includes(profileUser.username);
-  const hasReceivedRequest = user.connectionRequestsReceived?.includes(profileUser.username);
+  const currentConnections = user.connections || [];
+  const currentSentRequests = user.connectionRequestsSent || [];
+  const currentReceivedRequests = user.connectionRequestsReceived || [];
 
- const handleAction = async (actionEndpoint, optimisticUpdate) => {
+  const profileConnections = profileUser.connections || [];
+  const profileSentRequests = profileUser.connectionRequestsSent || [];
+  const profileReceivedRequests = profileUser.connectionRequestsReceived || [];
+
+  const isConnected =
+    relationshipHint === 'connected' ||
+    currentConnections.includes(profileUser.username) ||
+    profileConnections.includes(user.username);
+
+  const hasReceivedRequest =
+    relationshipHint === 'received' ||
+    currentReceivedRequests.includes(profileUser.username) ||
+    profileSentRequests.includes(user.username);
+
+  const hasSentRequest =
+    relationshipHint === 'sent' ||
+    currentSentRequests.includes(profileUser.username) ||
+    profileReceivedRequests.includes(user.username);
+
+  const handleAction = async (actionEndpoint, optimisticUpdate) => {
     setLoading(true);
     try {
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/${actionEndpoint}/${profileUser.username}`, {
@@ -25,8 +49,10 @@ export default function ConnectionButton({ profileUser }) {
       });
       
       if (response.ok) {
-        // We pass the new lists (optimisticUpdate) directly to the AuthContext
-        updateUser(optimisticUpdate); 
+        if (optimisticUpdate) {
+          updateUser(optimisticUpdate);
+        }
+        onActionComplete?.({ action: actionEndpoint, profileUser });
       }
     } catch (err) {
       console.error("Connection action failed", err);
@@ -37,6 +63,28 @@ export default function ConnectionButton({ profileUser }) {
 
   // State 1: We are already connected
   if (isConnected) {
+    if (showRemove) {
+      return (
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/chat', { state: { openDmWith: profileUser.username } })}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold transition-colors"
+          >
+            <MessageSquare size={18} /> Message
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => handleAction('remove', {
+              connections: currentConnections.filter((username) => username !== profileUser.username)
+            })}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-full font-bold transition-colors disabled:opacity-60"
+          >
+            <UserMinus size={18} /> Remove
+          </button>
+        </div>
+      );
+    }
+
     return (
       <button 
         // Pass the username cleanly through React Router State!
@@ -54,8 +102,9 @@ export default function ConnectionButton({ profileUser }) {
         <button 
           disabled={loading}
           onClick={() => handleAction('accept', { 
-            connections: [...(user.connections || []), profileUser.username],
-            connectionRequestsReceived: user.connectionRequestsReceived.filter(u => u !== profileUser.username)
+            connections: Array.from(new Set([...currentConnections, profileUser.username])),
+            connectionRequestsReceived: currentReceivedRequests.filter((username) => username !== profileUser.username),
+            connectionRequestsSent: currentSentRequests.filter((username) => username !== profileUser.username)
           })}
           className="flex items-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold"
         >
@@ -64,7 +113,7 @@ export default function ConnectionButton({ profileUser }) {
         <button 
           disabled={loading}
           onClick={() => handleAction('reject', {
-            connectionRequestsReceived: user.connectionRequestsReceived.filter(u => u !== profileUser.username)
+            connectionRequestsReceived: currentReceivedRequests.filter((username) => username !== profileUser.username)
           })}
           className="flex items-center gap-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full font-bold"
         >
@@ -88,7 +137,7 @@ export default function ConnectionButton({ profileUser }) {
     <button 
       disabled={loading}
       onClick={() => handleAction('request', {
-        connectionRequestsSent: [...(user.connectionRequestsSent || []), profileUser.username]
+        connectionRequestsSent: Array.from(new Set([...currentSentRequests, profileUser.username]))
       })}
       className="flex items-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full font-bold transition-colors"
     >

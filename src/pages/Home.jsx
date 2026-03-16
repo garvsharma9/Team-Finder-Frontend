@@ -317,12 +317,12 @@ const eventBullets = [
 
 export default function Index() {
   return (
-    <div className="tf-body min-h-screen w-full overflow-x-hidden bg-slate-50">
+    <div className="tf-body min-h-screen w-full bg-slate-50" style={{ overflowX: 'clip' }}>
       <style>{styleSheet}</style>
 
       {/* ===== NAVBAR ===== */}
-      <div className="px-4 pt-4 sm:px-6 lg:px-8">
-        <nav className="tf-glass relative z-40 mx-auto max-w-7xl rounded-[28px] border border-white/10">
+      <div className="sticky top-4 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+        <nav className="tf-glass mx-auto max-w-7xl rounded-[28px] border border-white/10">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="tf-display flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-lg shadow-md">

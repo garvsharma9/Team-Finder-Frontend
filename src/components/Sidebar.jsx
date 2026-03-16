@@ -807,7 +807,7 @@ const primaryNavItems = [
   { icon: SearchIcon, label: 'Find Members', to: '/search' },
   { icon: CalendarDays, label: 'Campus Events', to: '/events' },
   { icon: MessageCircle, label: 'Chat', to: '/chat', unreadKey: 'chat' },
-  { icon: Bell, label: 'Network Alerts', to: '/network', unreadKey: 'network' } 
+  { icon: Bell, label: 'Network', to: '/network', unreadKey: 'network' } 
 ];
 
 const accountNavItems = [

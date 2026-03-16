@@ -93,6 +93,58 @@ export default function ManageTeams() {
     }
   };
 
+  const handleRemoveMember = async (postId, targetUsername) => {
+    const confirmed = window.confirm(
+      `Remove ${targetUsername} from this workspace? They will lose access to this team chat.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/remove-member?targetUsername=${encodeURIComponent(targetUsername)}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.ok) {
+        setMyPosts((previousPosts) =>
+          previousPosts.map((post) => {
+            if (post.id !== postId) return post;
+
+            return {
+              ...post,
+              acceptedUsernames: (post.acceptedUsernames || []).filter((name) => name !== targetUsername),
+            };
+          })
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteTeam = async (postId, teamName) => {
+    const confirmed = window.confirm(
+      `Delete ${teamName || 'this team'} permanently? This will remove the workspace and delete the team chat for everyone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-team/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        setMyPosts((previousPosts) => previousPosts.filter((post) => post.id !== postId));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const styleSheet = `
     .teams-page {
       max-width: 1020px;
@@ -148,6 +200,14 @@ export default function ManageTeams() {
     .teams-status-pending {
       background: ${colors.accentGhost};
       color: ${colors.accent};
+    }
+
+    .teams-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .teams-grid {
@@ -227,7 +287,8 @@ export default function ManageTeams() {
     }
 
     .teams-button,
-    .teams-button-muted {
+    .teams-button-muted,
+    .teams-button-danger {
       border-radius: 14px;
       padding: 9px 14px;
       font-weight: 800;
@@ -247,8 +308,15 @@ export default function ManageTeams() {
       color: ${colors.red};
     }
 
+    .teams-button-danger {
+      border: 1px solid rgba(255, 123, 141, 0.3);
+      background: linear-gradient(135deg, rgba(255, 123, 141, 0.2), rgba(239, 68, 68, 0.14));
+      color: ${colors.red};
+    }
+
     .teams-button:hover,
-    .teams-button-muted:hover {
+    .teams-button-muted:hover,
+    .teams-button-danger:hover {
       transform: translateY(-1px);
     }
 
@@ -303,10 +371,20 @@ export default function ManageTeams() {
                   </p>
                 </div>
 
-                <div>
+                <div className="teams-header-actions">
                   {isOwner ? <span className="teams-status teams-status-lead">Team Lead</span> : null}
                   {!isOwner && isAccepted ? <span className="teams-status teams-status-member">Member</span> : null}
                   {!isOwner && !isAccepted && isPending ? <span className="teams-status teams-status-pending">Pending</span> : null}
+
+                  {isOwner ? (
+                    <button
+                      className="teams-button-danger"
+                      type="button"
+                      onClick={() => handleDeleteTeam(post.id, post.teamName)}
+                    >
+                      Delete Team
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -389,6 +467,18 @@ export default function ManageTeams() {
                           <div style={{ fontSize: '12px', color: colors.green, fontWeight: '800' }}>MEMBER</div>
                         </div>
                       </div>
+
+                      {isOwner ? (
+                        <div className="teams-actions">
+                          <button
+                            className="teams-button-muted"
+                            type="button"
+                            onClick={() => handleRemoveMember(post.id, member)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>

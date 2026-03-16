@@ -1115,22 +1115,45 @@ export default function Chat() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const fetchMyTeams = async () => {
+  const fetchMyTeams = async (isBackground = false) => {
     try {
-      setLoadingTeams(true);
+      if (!isBackground) setLoadingTeams(true);
       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to load teams');
+
       const data = await response.json();
       setTeams(data);
-      if (data.length > 0 && !selectedTeamId) {
+
+      setUnreadTeamById(prev => {
+        const allowedTeamIds = new Set(data.map(team => team.id));
+        const next = Object.fromEntries(
+          Object.entries(prev).filter(([teamId]) => allowedTeamIds.has(teamId))
+        );
+        const changed =
+          Object.keys(prev).length !== Object.keys(next).length ||
+          Object.keys(next).some(key => next[key] !== prev[key]);
+
+        if (!changed) return prev;
+
+        unreadTeamRef.current = next;
+        persistUnreadState(next, unreadDmRef.current);
+        return next;
+      });
+
+      const activeTeamStillExists = data.some(team => team.id === selectedTeamRef.current);
+      if (selectedTeamRef.current && !activeTeamStillExists) {
+        setMessages([]);
+        setSelectedTeamId(data[0]?.id || '');
+        setShowTeamMembersCard(false);
+      } else if (data.length > 0 && !selectedTeamRef.current) {
         setSelectedTeamId(data[0].id);
       }
     } catch (err) {
-      setError('Could not load your teams.');
+      if (!isBackground) setError('Could not load your teams.');
     } finally {
-      setLoadingTeams(false);
+      if (!isBackground) setLoadingTeams(false);
     }
   };
 
@@ -1141,6 +1164,13 @@ export default function Chat() {
       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/chat/${teamId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (response.status === 403) {
+        setMessages([]);
+        setShowTeamMembersCard(false);
+        await fetchMyTeams(true);
+        setError('You no longer have access to this workspace chat.');
+        return;
+      }
       if (!response.ok) throw new Error('Failed to load messages');
       const data = await response.json();
       setMessages(data);
@@ -1271,6 +1301,13 @@ export default function Chat() {
             },
             body: JSON.stringify({ content })
           });
+          if (response.status === 403) {
+            setMessages([]);
+            setShowTeamMembersCard(false);
+            await fetchMyTeams(true);
+            setError('You no longer have access to this workspace chat.');
+            return;
+          }
           if (!response.ok) throw new Error('Failed to send message');
           const newMessage = await response.json();
           setMessages(prev => [...prev, newMessage]);
@@ -1419,6 +1456,14 @@ export default function Chat() {
         }
 
         if (payload.type === 'error') {
+          if (
+            payload.message === 'Access denied for this team' ||
+            payload.message === 'Cannot send message to this team'
+          ) {
+            setMessages([]);
+            setShowTeamMembersCard(false);
+            fetchMyTeams(true);
+          }
           setError(payload.message || 'Chat socket error.');
         }
       } catch (e) {
@@ -1470,6 +1515,14 @@ export default function Chat() {
         fetchDmMessages(selectedDmRef.current, true);
       }
     }, 2000);
+    return () => clearInterval(intervalId);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const intervalId = setInterval(() => {
+      fetchMyTeams(true);
+    }, 5000);
     return () => clearInterval(intervalId);
   }, [token]);
 

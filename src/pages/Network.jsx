@@ -113,7 +113,7 @@ import { themePalette } from '../theme/palette';
 import ConnectionButton from '../components/ConnectionButton';
 
 export default function Network() {
-  const { token, user } = useContext(AuthContext);
+  const { token, user, updateUser } = useContext(AuthContext);
   const colors = themePalette;
 
   const [pending, setPending] = useState([]);
@@ -130,8 +130,29 @@ export default function Network() {
           fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/accepted`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
-        if (pendingRes.ok) setPending(await pendingRes.json());
-        if (connRes.ok) setConnections(await connRes.json());
+        const nextUserFields = {};
+
+        if (pendingRes.ok) {
+          const pendingData = await pendingRes.json();
+          setPending(pendingData);
+          const pendingUsernames = pendingData.map((pendingUser) => pendingUser.username);
+          if (JSON.stringify(pendingUsernames) !== JSON.stringify(user?.connectionRequestsReceived || [])) {
+            nextUserFields.connectionRequestsReceived = pendingUsernames;
+          }
+        }
+
+        if (connRes.ok) {
+          const connectionData = await connRes.json();
+          setConnections(connectionData);
+          const connectionUsernames = connectionData.map((connectionUser) => connectionUser.username);
+          if (JSON.stringify(connectionUsernames) !== JSON.stringify(user?.connections || [])) {
+            nextUserFields.connections = connectionUsernames;
+          }
+        }
+
+        if (Object.keys(nextUserFields).length > 0) {
+          updateUser(nextUserFields);
+        }
       } catch (err) {
         console.error("Failed to load network", err);
       } finally {
@@ -141,6 +162,26 @@ export default function Network() {
 
     fetchNetworkData();
   }, [token, user?.connections, user?.connectionRequestsReceived]); 
+
+  const handlePendingActionComplete = ({ action, profileUser }) => {
+    setPending((prevPending) => prevPending.filter((pendingUser) => pendingUser.username !== profileUser.username));
+
+    if (action === 'accept') {
+      setConnections((prevConnections) => {
+        if (prevConnections.some((connectedUser) => connectedUser.username === profileUser.username)) {
+          return prevConnections;
+        }
+        return [profileUser, ...prevConnections];
+      });
+    }
+  };
+
+  const handleConnectionActionComplete = ({ action, profileUser }) => {
+    if (action !== 'remove') return;
+    setConnections((prevConnections) =>
+      prevConnections.filter((connectedUser) => connectedUser.username !== profileUser.username)
+    );
+  };
 
   const styleSheet = `
     .network-page { max-width: 920px; margin: 38px auto; padding: 0 20px; font-family: -apple-system, sans-serif; }
@@ -209,7 +250,11 @@ export default function Network() {
                 </div>
               </Link>
               
-              <ConnectionButton profileUser={pUser} />
+              <ConnectionButton
+                profileUser={pUser}
+                relationshipHint="received"
+                onActionComplete={handlePendingActionComplete}
+              />
             </div>
           ))}
         </div>
@@ -242,7 +287,11 @@ export default function Network() {
                 </div>
               </Link>
               
-              <ConnectionButton profileUser={cUser} />
+              <ConnectionButton
+                profileUser={cUser}
+                showRemove
+                onActionComplete={handleConnectionActionComplete}
+              />
             </div>
           ))
         )}
