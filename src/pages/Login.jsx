@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { themePalette } from '../theme/palette';
-// import { API_BASE_URL } from '../config';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [step, setStep] = useState('LOGIN'); // LOGIN, LOGIN_OTP, FORGOT_REQ, FORGOT_RESET
@@ -26,6 +26,29 @@ export default function Login() {
     setMessage(msg);
     setOtp('');
     setStep(newStep);
+  };
+
+  //google login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      // Send the secure Google token to your Spring Boot backend
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Log the user into your React app using your standard AuthContext
+        login(data.user, data.token);
+        navigate('/feed'); // or /dashboard
+      } else {
+        alert("Google authentication failed on server.");
+      }
+    } catch (error) {
+      console.error("Google login error", error);
+    }
   };
 
   // --- 1. NORMAL LOGIN ---
@@ -140,14 +163,29 @@ export default function Login() {
         {message && <div className="status-msg success">{message}</div>}
 
         {step === 'LOGIN' && (
-          <form onSubmit={handleLoginSubmit}>
-            <input className="auth-input" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-            <input className="auth-input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            <div style={{ textAlign: 'right', marginBottom: '10px' }}>
-              <button type="button" className="link-btn" onClick={() => resetUI('FORGOT_REQ')}>Forgot Password?</button>
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  console.log('Google Login Failed');
+                }}
+                useOneTap 
+              />
             </div>
-            <button className="auth-btn btn-primary" type="submit" disabled={isLoading}>{isLoading ? 'Verifying...' : 'Sign In'}</button>
-          </form>
+            <div style={{ textAlign: 'center', margin: '15px 0', color: '#888' }}>
+              or continue with email
+            </div>
+
+            <form onSubmit={handleLoginSubmit}>
+              <input className="auth-input" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+              <input className="auth-input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+                <button type="button" className="link-btn" onClick={() => resetUI('FORGOT_REQ')}>Forgot Password?</button>
+              </div>
+              <button className="auth-btn btn-primary" type="submit" disabled={isLoading}>{isLoading ? 'Verifying...' : 'Sign In'}</button>
+            </form>
+          </>
         )}
 
         {step === 'LOGIN_OTP' && (

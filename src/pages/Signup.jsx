@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { themePalette } from '../theme/palette';
+import { AuthContext } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   const colors = themePalette;
 
   const [formData, setFormData] = useState({
@@ -20,6 +23,27 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  //google login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        login(data.user, data.token);
+        navigate('/feed'); 
+      } else {
+        alert("Google authentication failed on server.");
+      }
+    } catch (error) {
+      console.error("Google login error", error);
+    }
+  };
 
   const handleSendOtp = async (event) => {
     event.preventDefault();
@@ -310,100 +334,115 @@ export default function Signup() {
         {message ? <div className="signup-status signup-success">{message}</div> : null}
 
         {!otpSent ? (
-          <form onSubmit={handleSendOtp}>
-            <div className="signup-row">
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  console.log('Google Login Failed');
+                }}
+                useOneTap 
+              />
+            </div>
+            <div style={{ textAlign: 'center', margin: '15px 0', color: '#888' }}>
+              or continue with email
+            </div>
+
+            <form onSubmit={handleSendOtp}>
+              <div className="signup-row">
+                <div className="signup-group">
+                  <label className="signup-label">Full Name</label>
+                  <input
+                    className="signup-input"
+                    type="text"
+                    placeholder="Garv Sharma"
+                    required
+                    value={formData.name}
+                    onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+                  />
+                </div>
+                <div className="signup-group">
+                  <label className="signup-label">Username</label>
+                  <input
+                    className="signup-input"
+                    type="text"
+                    placeholder="garv_dev"
+                    required
+                    value={formData.username}
+                    onChange={(event) => setFormData({ ...formData, username: event.target.value })}
+                  />
+                </div>
+              </div>
+
               <div className="signup-group">
-                <label className="signup-label">Full Name</label>
+                <label className="signup-label">Email Address</label>
                 <input
                   className="signup-input"
-                  type="text"
-                  placeholder="Garv Sharma"
+                  type="email"
+                  placeholder="you@university.edu"
                   required
-                  value={formData.name}
-                  onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+                  value={formData.email}
+                  onChange={(event) => setFormData({ ...formData, email: event.target.value })}
                 />
               </div>
+
               <div className="signup-group">
-                <label className="signup-label">Username</label>
+                <label className="signup-label">Password</label>
                 <input
                   className="signup-input"
-                  type="text"
-                  placeholder="garv_dev"
+                  type="password"
+                  placeholder="••••••••"
                   required
-                  value={formData.username}
-                  onChange={(event) => setFormData({ ...formData, username: event.target.value })}
+                  value={formData.password}
+                  onChange={(event) => setFormData({ ...formData, password: event.target.value })}
                 />
               </div>
-            </div>
 
-            <div className="signup-group">
-              <label className="signup-label">Email Address</label>
-              <input
-                className="signup-input"
-                type="email"
-                placeholder="you@university.edu"
-                required
-                value={formData.email}
-                onChange={(event) => setFormData({ ...formData, email: event.target.value })}
-              />
-            </div>
+              <div className="signup-divider">
+                <div className="signup-divider-line" />
+                <span className="signup-divider-text">Profile Details</span>
+                <div className="signup-divider-line" />
+              </div>
 
-            <div className="signup-group">
-              <label className="signup-label">Password</label>
-              <input
-                className="signup-input"
-                type="password"
-                placeholder="••••••••"
-                required
-                value={formData.password}
-                onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-              />
-            </div>
+              <div className="signup-row">
+                <div className="signup-group">
+                  <label className="signup-label">Branch</label>
+                  <input
+                    className="signup-input"
+                    type="text"
+                    placeholder="CS / IT"
+                    value={formData.branch}
+                    onChange={(event) => setFormData({ ...formData, branch: event.target.value })}
+                  />
+                </div>
+                <div className="signup-group">
+                  <label className="signup-label">College</label>
+                  <input
+                    className="signup-input"
+                    type="text"
+                    placeholder="University Name"
+                    value={formData.college}
+                    onChange={(event) => setFormData({ ...formData, college: event.target.value })}
+                  />
+                </div>
+              </div>
 
-            <div className="signup-divider">
-              <div className="signup-divider-line" />
-              <span className="signup-divider-text">Profile Details</span>
-              <div className="signup-divider-line" />
-            </div>
-
-            <div className="signup-row">
               <div className="signup-group">
-                <label className="signup-label">Branch</label>
+                <label className="signup-label">Skills (Comma separated)</label>
                 <input
                   className="signup-input"
                   type="text"
-                  placeholder="CS / IT"
-                  value={formData.branch}
-                  onChange={(event) => setFormData({ ...formData, branch: event.target.value })}
+                  placeholder="React, Java, Python..."
+                  value={formData.skillsString}
+                  onChange={(event) => setFormData({ ...formData, skillsString: event.target.value })}
                 />
               </div>
-              <div className="signup-group">
-                <label className="signup-label">College</label>
-                <input
-                  className="signup-input"
-                  type="text"
-                  placeholder="University Name"
-                  value={formData.college}
-                  onChange={(event) => setFormData({ ...formData, college: event.target.value })}
-                />
-              </div>
-            </div>
 
-            <div className="signup-group">
-              <label className="signup-label">Skills (Comma separated)</label>
-              <input
-                className="signup-input"
-                type="text"
-                placeholder="React, Java, Python..."
-                value={formData.skillsString}
-                onChange={(event) => setFormData({ ...formData, skillsString: event.target.value })}
-              />
-            </div>
-
-            <button className="signup-button" type="submit" disabled={isLoading}>
-              {isLoading ? 'Processing...' : 'Send Verification OTP'}
-            </button>
-          </form>
+              <button className="signup-button" type="submit" disabled={isLoading}>
+                {isLoading ? 'Processing...' : 'Send Verification OTP'}
+              </button>
+            </form>
+          </>
         ) : (
           <form onSubmit={handleVerifyAndSignup}>
             <div style={{ textAlign: 'center', marginBottom: '22px' }}>
