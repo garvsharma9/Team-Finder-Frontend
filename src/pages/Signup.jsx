@@ -27,7 +27,7 @@
 //   //google login
 //   const handleGoogleSuccess = async (credentialResponse) => {
 //     try {
-//       const response = await fetch('http://localhost:8080/public/auth/google', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ token: credentialResponse.credential })
@@ -52,7 +52,7 @@
 //     setIsLoading(true);
 
 //     try {
-//       const response = await fetch('http://localhost:8080/public/otp/send', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/send', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ email: formData.email }),
@@ -77,7 +77,7 @@
 //     setIsLoading(true);
 
 //     try {
-//       const otpResponse = await fetch('http://localhost:8080/public/otp/verify', {
+//       const otpResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/verify', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ email: formData.email, otp }),
@@ -99,7 +99,7 @@
 //         skill: skillArray,
 //       };
 
-//       const signupResponse = await fetch('http://localhost:8080/public/signup', {
+//       const signupResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/signup', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify(payload),
@@ -532,7 +532,7 @@ export default function Signup() {
       
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      fetch('http://localhost:8080/public/auth/github', {
+      fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/github', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
@@ -561,7 +561,7 @@ export default function Signup() {
   //google login
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const response = await fetch('http://localhost:8080/public/auth/google', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential })
@@ -586,7 +586,7 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/public/otp/send', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email }),
@@ -611,7 +611,7 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const otpResponse = await fetch('http://localhost:8080/public/otp/verify', {
+      const otpResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp }),
@@ -633,7 +633,7 @@ export default function Signup() {
         skill: skillArray,
       };
 
-      const signupResponse = await fetch('http://localhost:8080/public/signup', {
+      const signupResponse = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

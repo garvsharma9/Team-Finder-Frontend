@@ -30,7 +30,7 @@
 //       if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
 
 //       // CHANGED TO LOCALHOST
-//       const response = await fetch(`http://localhost:8080${endpoint}`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
 //         method: 'GET',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -52,7 +52,7 @@
 //     try {
 //       // CHANGED TO LOCALHOST
 //       const response = await fetch(
-//         `http://localhost:8080/home/like/${targetUsername}?likerUsername=${user.username}`,
+//         `https://garvsharma9-teamfinder-api.hf.space/home/like/${targetUsername}?likerUsername=${user.username}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -456,7 +456,7 @@ export default function Search() {
 
         try {
           // Hit the new batch endpoint
-          const response = await fetch('http://localhost:8080/user/users/batch', {
+          const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/users/batch', {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -507,7 +507,7 @@ export default function Search() {
       if (searchType === 'skill') endpoint = `/home/search-by-skill/${query}`;
       if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
 
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -528,7 +528,7 @@ export default function Search() {
   const handleLike = async (targetUsername) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/home/like/${targetUsername}?likerUsername=${user.username}`,
+        `https://garvsharma9-teamfinder-api.hf.space/home/like/${targetUsername}?likerUsername=${user.username}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },

@@ -108,10 +108,10 @@
 //     const boot = async () => {
 //       try {
 //         const [teamsRes, dmRes] = await Promise.all([
-//           fetch('http://localhost:8080/chat/my-teams', {
+//           fetch('https://garvsharma9-teamfinder-api.hf.space/chat/my-teams', {
 //             headers: { Authorization: `Bearer ${token}` }
 //           }),
-//           fetch('http://localhost:8080/chat/private/conversations', {
+//           fetch('https://garvsharma9-teamfinder-api.hf.space/chat/private/conversations', {
 //             headers: { Authorization: `Bearer ${token}` }
 //           })
 //         ]);
