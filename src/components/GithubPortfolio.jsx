@@ -156,7 +156,7 @@ export default function GithubPortfolio({ githubUrl }) {
       try {
         // Fetch up to 30 recent repos to get a good sample for the language pie chart
         // const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=30`);
-        const response = await fetch(`http://localhost:8080/public/github/${username}/repos`);
+        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/github/${username}/repos`);
         
         if (!response.ok) {
           if (response.status === 403) throw new Error("GitHub API rate limit exceeded.");

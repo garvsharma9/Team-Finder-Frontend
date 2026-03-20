@@ -45,7 +45,7 @@
 
 //   const fetchEvents = async () => {
 //     try {
-//       const response = await fetch('http://localhost:8080/events/all', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/all', {
 //         method: 'GET',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -87,7 +87,7 @@
 //     }));
 
 //     try {
-//       await fetch(`http://localhost:8080/events/${eventId}/like?username=${user.username}`, {
+//       await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/like?username=${user.username}`, {
 //         method: 'POST',
 //         headers: { 'Authorization': `Bearer ${token}` }
 //       });
@@ -116,7 +116,7 @@
 //     }));
 
 //     try {
-//       await fetch(`http://localhost:8080/events/${eventId}/dislike?username=${user.username}`, {
+//       await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/dislike?username=${user.username}`, {
 //         method: 'POST',
 //         headers: { 'Authorization': `Bearer ${token}` }
 //       });
@@ -142,7 +142,7 @@
 //     const eventPayload = { ...formData, postedBy: user.username };
 
 //     try {
-//       const response = await fetch('http://localhost:8080/events/add', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/add', {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@
 //     if (!window.confirm('Are you sure you want to delete this official event?')) return;
 
 //     try {
-//       const response = await fetch(`http://localhost:8080/events/delete/${eventId}`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
 //         method: 'DELETE',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -655,7 +655,7 @@ export default function Events() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:8080/events/all', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/all', {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -697,7 +697,7 @@ export default function Events() {
     }));
 
     try {
-      await fetch(`http://localhost:8080/events/${eventId}/like?username=${user.username}`, {
+      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/like?username=${user.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -726,7 +726,7 @@ export default function Events() {
     }));
 
     try {
-      await fetch(`http://localhost:8080/events/${eventId}/dislike?username=${user.username}`, {
+      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/dislike?username=${user.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -751,7 +751,7 @@ export default function Events() {
     const eventPayload = { ...formData, postedBy: user.username };
 
     try {
-      const response = await fetch('http://localhost:8080/events/add', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -786,7 +786,7 @@ export default function Events() {
     if (!window.confirm('Are you sure you want to delete this official event?')) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/events/delete/${eventId}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

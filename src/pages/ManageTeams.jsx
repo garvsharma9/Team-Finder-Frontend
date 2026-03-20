@@ -11,7 +11,7 @@
 
 //   const fetchMyPosts = async () => {
 //     try {
-//       const response = await fetch('http://localhost:8080/post/all', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -42,7 +42,7 @@
 //   const handleAccept = async (postId, targetUsername) => {
 //     try {
 //       const response = await fetch(
-//         `http://localhost:8080/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
+//         `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -71,7 +71,7 @@
 
 //     try {
 //       const response = await fetch(
-//         `http://localhost:8080/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
+//         `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -101,7 +101,7 @@
 
 //     try {
 //       const response = await fetch(
-//         `http://localhost:8080/post/${postId}/remove-member?targetUsername=${encodeURIComponent(targetUsername)}`,
+//         `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/remove-member?targetUsername=${encodeURIComponent(targetUsername)}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -132,7 +132,7 @@
 //     if (!confirmed) return;
 
 //     try {
-//       const response = await fetch(`http://localhost:8080/post/delete-team/${postId}`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-team/${postId}`, {
 //         method: 'DELETE',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -511,7 +511,7 @@ export default function ManageTeams() {
 
   const fetchMyPosts = async () => {
     try {
-      const response = await fetch('http://localhost:8080/post/all', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -542,7 +542,7 @@ export default function ManageTeams() {
   const handleAccept = async (postId, targetUsername) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
+        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/accept?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -571,7 +571,7 @@ export default function ManageTeams() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
+        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/reject?ownerUsername=${user.username}&targetUsername=${targetUsername}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -601,7 +601,7 @@ export default function ManageTeams() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/post/${postId}/remove-member?targetUsername=${encodeURIComponent(targetUsername)}`,
+        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/remove-member?targetUsername=${encodeURIComponent(targetUsername)}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -632,7 +632,7 @@ export default function ManageTeams() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/post/delete-team/${postId}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-team/${postId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

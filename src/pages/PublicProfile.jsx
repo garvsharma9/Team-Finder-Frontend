@@ -19,7 +19,7 @@
 //   useEffect(() => {
 //     const fetchProfile = async () => {
 //       try {
-//         const response = await fetch(`http://localhost:8080/home/search-by-username/${username}`, {
+//         const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${username}`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
 
@@ -292,7 +292,7 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/home/search-by-username/${username}`, {
+        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${username}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

@@ -32,7 +32,7 @@
 //     const fetchSuggestions = async () => {
 //       if (!token) return;
 //       try {
-//         const response = await fetch('http://localhost:8080/user/suggested-teammates', { // Adjust URL prefix if needed
+//         const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/suggested-teammates', { // Adjust URL prefix if needed
 //           headers: { Authorization: `Bearer ${token}` }
 //         });
 //         if (response.ok) {
@@ -60,7 +60,7 @@
 
 //       const endpoint = type === 'avatar' ? '/user/upload-avatar' : '/user/upload-banner';
 
-//       const response = await fetch(`http://localhost:8080${endpoint}`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
 //         method: 'POST',
 //         headers: {
 //           'Authorization': `Bearer ${token}`
@@ -98,7 +98,7 @@
 
 //   const handleSaveProfile = async () => {
 //     try {
-//       const response = await fetch('http://localhost:8080/user/update', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -135,7 +135,7 @@
 //       const currentSkills = user.skill || [];
 //       const updatedSkills = [...currentSkills, newSkill.trim()];
 
-//       const response = await fetch('http://localhost:8080/user/update', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -158,7 +158,7 @@
 //     const updatedSkills = (user.skill || []).filter((skill) => skill !== skillToRemove);
 
 //     try {
-//       const response = await fetch('http://localhost:8080/user/update', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -804,7 +804,7 @@ export default function Dashboard() {
     const fetchSuggestions = async () => {
       if (!token) return;
       try {
-        const response = await fetch('http://localhost:8080/user/suggested-teammates', { 
+        const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/suggested-teammates', { 
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.ok) {
@@ -833,7 +833,7 @@ export default function Dashboard() {
 
       const endpoint = type === 'avatar' ? '/user/upload-avatar' : '/user/upload-banner';
 
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -866,7 +866,7 @@ export default function Dashboard() {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -897,7 +897,7 @@ export default function Dashboard() {
       const currentSkills = user.skill || [];
       const updatedSkills = [...currentSkills, newSkill.trim()];
 
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -920,7 +920,7 @@ export default function Dashboard() {
     const updatedSkills = (user.skill || []).filter((skill) => skill !== skillToRemove);
 
     try {
-      const response = await fetch('http://localhost:8080/user/update', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

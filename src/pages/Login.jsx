@@ -49,7 +49,7 @@
       
 //       window.history.replaceState({}, document.title, window.location.pathname);
 
-//       fetch('http://localhost:8080/public/auth/github', {
+//       fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/github', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ code })
@@ -80,7 +80,7 @@
 //   const handleGoogleSuccess = async (credentialResponse) => {
 //     try {
 //       // Send the secure Google token to your Spring Boot backend
-//       const response = await fetch('http://localhost:8080/public/auth/google', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ token: credentialResponse.credential })
@@ -104,7 +104,7 @@
 //     e.preventDefault();
 //     setError(''); setMessage(''); setIsLoading(true);
 //     try {
-//       const response = await fetch(`http://localhost:8080/public/signin`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/signin`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username, password }) 
@@ -121,7 +121,7 @@
 //     e.preventDefault();
 //     setError(''); setIsLoading(true);
 //     try {
-//       const response = await fetch(`http://localhost:8080/public/verify-login`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/verify-login`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username, otp }) 
@@ -139,7 +139,7 @@
 //     e.preventDefault();
 //     setError(''); setIsLoading(true);
 //     try {
-//       const response = await fetch(`http://localhost:8080/public/forgot-password/request`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/forgot-password/request`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username }) 
@@ -160,7 +160,7 @@
 //     }
 //     setError(''); setIsLoading(true);
 //     try {
-//       const response = await fetch(`http://localhost:8080/public/forgot-password/reset`, {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/forgot-password/reset`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username, otp, newPassword }) 
@@ -340,7 +340,7 @@ export default function Login() {
       
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      fetch('http://localhost:8080/public/auth/github', {
+      fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/github', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
@@ -371,7 +371,7 @@ export default function Login() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       // Send the secure Google token to your Spring Boot backend
-      const response = await fetch('http://localhost:8080/public/auth/google', {
+      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential })
@@ -395,7 +395,7 @@ export default function Login() {
     e.preventDefault();
     setError(''); setMessage(''); setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/public/signin`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }) 
@@ -412,7 +412,7 @@ export default function Login() {
     e.preventDefault();
     setError(''); setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/public/verify-login`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/verify-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, otp }) 
@@ -430,7 +430,7 @@ export default function Login() {
     e.preventDefault();
     setError(''); setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/public/forgot-password/request`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/forgot-password/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }) 
@@ -451,7 +451,7 @@ export default function Login() {
     }
     setError(''); setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/public/forgot-password/reset`, {
+      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/public/forgot-password/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, otp, newPassword }) 
