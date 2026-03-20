@@ -549,7 +549,9 @@ export default function Index() {
                 className="hover:text-slate-800 transition-colors bg-transparent border-none p-0 text-sm font-medium cursor-pointer"
                 style={{ font: 'inherit', color: 'inherit' }}
               >
-                Contact
+                Contact : 
+                garvroc9@gmail.com
+
               </button>
             </div>
             <p className="text-xs text-slate-400">© 2026 TeamFinder. All rights reserved.</p>
