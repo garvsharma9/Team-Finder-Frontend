@@ -1,7 +1,7 @@
-// import React, { useContext, useState } from 'react';
+// import React, { useContext, useState, useRef } from 'react';
 // import { AuthContext } from '../context/AuthContext';
 // import { themePalette } from '../theme/palette';
-
+// import { Camera, Loader2 } from 'lucide-react'; // Added icons for the upload buttons
 // export default function Dashboard() {
 //   const { user, token, updateUser } = useContext(AuthContext);
 //   const colors = themePalette;
@@ -12,13 +12,67 @@
 //     bio: user?.bio || '',
 //     branch: user?.branch || '',
 //     college: user?.college || '',
-//     experienceTag: user?.experienceTag || 'Beginner',
 //   });
 //   const [newSkill, setNewSkill] = useState('');
 
+//   // --- NEW: Image Upload State & Refs ---
+//   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+//   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+//   const avatarInputRef = useRef(null);
+//   const bannerInputRef = useRef(null);
+
+//   const handleFileUpload = async (event, type) => {
+//     const file = event.target.files[0];
+//     if (!file) return;
+
+//     const uploadData = new FormData();
+//     uploadData.append('file', file);
+
+//     try {
+//       if (type === 'avatar') setIsUploadingAvatar(true);
+//       else setIsUploadingBanner(true);
+
+//       const endpoint = type === 'avatar' ? '/user/upload-avatar' : '/user/upload-banner';
+
+//       const response = await fetch(`http://localhost:8080${endpoint}`, {
+//         method: 'POST',
+//         headers: {
+//           'Authorization': `Bearer ${token}`
+//           // NO Content-Type header here! The browser sets it automatically for FormData
+//         },
+//         body: uploadData
+//       });
+
+//       if (!response.ok) {
+//         // This will grab the exact error text from Spring Boot
+//         const errorText = await response.text(); 
+//         console.error("Server says:", errorText);
+//         throw new Error(errorText);
+//       }
+//       const data = await response.json();
+
+//       // Update the global user context immediately so the image appears
+//       if (type === 'avatar') {
+//         updateUser({ profilePictureUrl: data.url });
+//       } else {
+//         updateUser({ bannerPictureUrl: data.url });
+//       }
+      
+//     } catch (error) {
+//       console.error("Upload error:", error);
+//       alert("Failed to upload image. Please try again.");
+//     } finally {
+//       if (type === 'avatar') setIsUploadingAvatar(false);
+//       else setIsUploadingBanner(false);
+//       // Clear the input so you can upload the same file again if needed
+//       event.target.value = null; 
+//     }
+//   };
+//   // --------------------------------------
+
 //   const handleSaveProfile = async () => {
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+//       const response = await fetch('http://localhost:8080/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -48,7 +102,7 @@
 //       const currentSkills = user.skill || [];
 //       const updatedSkills = [...currentSkills, newSkill.trim()];
 
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+//       const response = await fetch('http://localhost:8080/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -71,7 +125,7 @@
 //     const updatedSkills = (user.skill || []).filter((skill) => skill !== skillToRemove);
 
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+//       const response = await fetch('http://localhost:8080/user/update', {
 //         method: 'PUT',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -110,6 +164,40 @@
 //     .dashboard-cover {
 //       height: 190px;
 //       background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc 55%, ${colors.accent});
+//       background-size: cover;
+//       background-position: center;
+//       position: relative;
+//     }
+
+//     .dashboard-cover-overlay {
+//       position: absolute;
+//       top: 0; left: 0; right: 0; bottom: 0;
+//       background: rgba(0,0,0,0);
+//       display: flex;
+//       align-items: flex-start;
+//       justify-content: flex-end;
+//       padding: 16px;
+//       transition: background 0.3s;
+//     }
+
+//     .dashboard-cover:hover .dashboard-cover-overlay {
+//       background: rgba(0,0,0,0.2);
+//     }
+
+//     .upload-btn {
+//       background: rgba(255,255,255,0.8);
+//       border: none;
+//       border-radius: 50%;
+//       width: 36px; height: 36px;
+//       display: flex; align-items: center; justify-content: center;
+//       cursor: pointer;
+//       color: #333;
+//       transition: all 0.2s;
+//     }
+
+//     .upload-btn:hover {
+//       background: #fff;
+//       transform: scale(1.05);
 //     }
 
 //     .dashboard-avatar-row {
@@ -130,6 +218,8 @@
 //       border-radius: 999px;
 //       border: 6px solid ${colors.glassStrong};
 //       background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc);
+//       background-size: cover;
+//       background-position: center;
 //       color: #fff;
 //       display: flex;
 //       align-items: center;
@@ -137,6 +227,35 @@
 //       font-size: 52px;
 //       font-weight: 800;
 //       box-shadow: ${colors.shadowStrong};
+//       position: relative;
+//       overflow: hidden;
+//     }
+
+//     .dashboard-avatar-overlay {
+//       position: absolute;
+//       top: 0; left: 0; right: 0; bottom: 0;
+//       background: rgba(0,0,0,0);
+//       display: flex;
+//       align-items: center;
+//       justify-content: center;
+//       opacity: 0;
+//       transition: all 0.3s;
+//       cursor: pointer;
+//       color: white;
+//     }
+
+//     .dashboard-avatar:hover .dashboard-avatar-overlay {
+//       background: rgba(0,0,0,0.4);
+//       opacity: 1;
+//     }
+
+//     .spin-icon {
+//       animation: spin 1s linear infinite;
+//     }
+
+//     @keyframes spin {
+//       from { transform: rotate(0deg); }
+//       to { transform: rotate(360deg); }
 //     }
 
 //     .dashboard-action {
@@ -249,10 +368,58 @@
 //     <div className="dashboard-page">
 //       <style>{styleSheet}</style>
 
+//       {/* HIDDEN FILE INPUTS */}
+//       <input 
+//         type="file" 
+//         accept="image/*" 
+//         ref={avatarInputRef} 
+//         onChange={(e) => handleFileUpload(e, 'avatar')} 
+//         style={{ display: 'none' }}
+//       />
+//       <input 
+//         type="file" 
+//         accept="image/*" 
+//         ref={bannerInputRef} 
+//         onChange={(e) => handleFileUpload(e, 'banner')} 
+//         style={{ display: 'none' }}
+//       />
+
 //       <div className="dashboard-card">
-//         <div className="dashboard-cover" />
+//         {/* BANNER SECTION */}
+//         <div 
+//           className="dashboard-cover" 
+//           style={user.bannerPictureUrl ? { backgroundImage: `url(${user.bannerPictureUrl})` } : {}}
+//         >
+//           <div className="dashboard-cover-overlay">
+//             <button 
+//               className="upload-btn" 
+//               onClick={() => bannerInputRef.current.click()}
+//               disabled={isUploadingBanner}
+//               title="Change Banner Image"
+//             >
+//               {isUploadingBanner ? <Loader2 className="spin-icon" size={20} /> : <Camera size={20} />}
+//             </button>
+//           </div>
+//         </div>
+
 //         <div className="dashboard-avatar-row">
-//           <div className="dashboard-avatar">{(user.name || user.username).charAt(0).toUpperCase()}</div>
+//           {/* AVATAR SECTION */}
+//           <div 
+//             className="dashboard-avatar"
+//             style={user.profilePictureUrl ? { backgroundImage: `url(${user.profilePictureUrl})` } : {}}
+//           >
+//             {/* Show initials ONLY if there is no profile picture */}
+//             {!user.profilePictureUrl && (user.name || user.username).charAt(0).toUpperCase()}
+            
+//             <div 
+//               className="dashboard-avatar-overlay" 
+//               onClick={() => !isUploadingAvatar && avatarInputRef.current.click()}
+//               title="Change Profile Picture"
+//             >
+//               {isUploadingAvatar ? <Loader2 className="spin-icon" size={28} /> : <Camera size={28} />}
+//             </div>
+//           </div>
+
 //           {!isEditing ? (
 //             <button className="dashboard-action" type="button" onClick={() => setIsEditing(true)}>
 //               Edit Profile
@@ -275,7 +442,7 @@
 //               </p>
 //               <p style={{ margin: 0, color: colors.textSecondary, fontWeight: '700' }}>
 //                 @{user.username} • <span style={{ color: colors.accent }}>{user.experienceTag || 'Beginner'} Level</span> •{' '}
-//                 <span style={{ color: colors.green }}>👍 {user.likesReceived || 0} Endorsements</span>
+//                 <span style={{ color: colors.green || '#10b981' }}>👍 {user.likesReceived || 0} Endorsements</span>
 //               </p>
 //             </>
 //           ) : (
@@ -303,17 +470,6 @@
 //                 value={formData.college}
 //                 onChange={(event) => setFormData({ ...formData, college: event.target.value })}
 //               />
-
-//               <label className="dashboard-label">Expertise Level</label>
-//               <select
-//                 className="dashboard-select"
-//                 value={formData.experienceTag}
-//                 onChange={(event) => setFormData({ ...formData, experienceTag: event.target.value })}
-//               >
-//                 <option value="Beginner">Beginner</option>
-//                 <option value="Intermediate">Intermediate</option>
-//                 <option value="Pro">Pro</option>
-//               </select>
 //             </div>
 //           )}
 //         </div>
@@ -386,11 +542,13 @@
 // }
 
 
-import React, { useContext, useState, useRef } from 'react';
+
+import React, { useContext, useState, useRef, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { themePalette } from '../theme/palette';
-import { Camera, Loader2 } from 'lucide-react'; // Added icons for the upload buttons
-
+import { Camera, Loader2, Github, Linkedin } from 'lucide-react'; // Added Github and Linkedin icons
+import GithubPortfolio from '../components/GithubPortfolio'; // Adjust path based on where you saved it
 export default function Dashboard() {
   const { user, token, updateUser } = useContext(AuthContext);
   const colors = themePalette;
@@ -401,6 +559,8 @@ export default function Dashboard() {
     bio: user?.bio || '',
     branch: user?.branch || '',
     college: user?.college || '',
+    linkedinUrl: user?.linkedinUrl || '', // NEW
+    githubUrl: user?.githubUrl || '',     // NEW
   });
   const [newSkill, setNewSkill] = useState('');
 
@@ -409,7 +569,29 @@ export default function Dashboard() {
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+// --- NEW: Suggested Teammates State ---
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
 
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!token) return;
+      try {
+        const response = await fetch('http://localhost:8080/user/suggested-teammates', { // Adjust URL prefix if needed
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedUsers(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch suggestions", err);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+    fetchSuggestions();
+  }, [token, user?.skill]); // Re-fetch if their skills change!
   const handleFileUpload = async (event, type) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -423,7 +605,7 @@ export default function Dashboard() {
 
       const endpoint = type === 'avatar' ? '/user/upload-avatar' : '/user/upload-banner';
 
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
+      const response = await fetch(`http://localhost:8080${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -461,7 +643,7 @@ export default function Dashboard() {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+      const response = await fetch('http://localhost:8080/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -471,7 +653,14 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        updateUser(formData);
+        // --- THE FIX IS HERE ---
+        // 1. Parse the JSON response coming from your newly updated backend
+        const updatedUserFromDB = await response.json(); 
+        
+        // 2. Pass that real, database-confirmed object into your AuthContext
+        updateUser(updatedUserFromDB); 
+        // -----------------------
+
         setIsEditing(false);
         alert('Profile updated successfully!');
       } else {
@@ -491,7 +680,7 @@ export default function Dashboard() {
       const currentSkills = user.skill || [];
       const updatedSkills = [...currentSkills, newSkill.trim()];
 
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+      const response = await fetch('http://localhost:8080/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -514,7 +703,7 @@ export default function Dashboard() {
     const updatedSkills = (user.skill || []).filter((skill) => skill !== skillToRemove);
 
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/update', {
+      const response = await fetch('http://localhost:8080/user/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -735,6 +924,7 @@ export default function Dashboard() {
       color: ${colors.accent};
       font-size: 13px;
       font-weight: 800;
+      text-transform: capitalize;
     }
 
     .dashboard-skill-remove {
@@ -747,6 +937,94 @@ export default function Dashboard() {
       font-weight: 800;
       padding: 0;
     }
+      /* --- CAROUSEL STYLES --- */
+    .carousel-section {
+      margin-bottom: 30px;
+    }
+    .carousel-header {
+      font-size: 20px;
+      font-weight: 800;
+      color: ${colors.textMain};
+      margin: 0 0 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .carousel-container {
+      display: flex;
+      overflow-x: auto;
+      gap: 16px;
+      padding: 10px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; /* Firefox */
+    }
+    .carousel-container::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+    .carousel-card {
+      flex: 0 0 240px; /* Fixed width for each card */
+      scroll-snap-align: start;
+      background: ${colors.glass};
+      border: 1px solid ${colors.border};
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: ${colors.shadow};
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .carousel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: ${colors.shadowStrong};
+      border-color: ${colors.blue};
+    }
+    .carousel-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      border: 3px solid ${colors.glassStrong};
+      box-shadow: ${colors.shadow};
+      object-fit: cover;
+    }
+    .carousel-name {
+      color: ${colors.textMain};
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0 0 4px 0;
+    }
+    .carousel-role {
+      color: ${colors.textSecondary};
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+    }
+    .carousel-skills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+    }
+    .carousel-skill-chip {
+      background: ${colors.mutedSurface};
+      color: ${colors.textSecondary};
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      text-transform: capitalize;
+    }
   `;
 
   if (!user) {
@@ -756,7 +1034,8 @@ export default function Dashboard() {
   return (
     <div className="dashboard-page">
       <style>{styleSheet}</style>
-
+   
+      {/* ---------------------------------- */}
       {/* HIDDEN FILE INPUTS */}
       <input 
         type="file" 
@@ -833,6 +1112,41 @@ export default function Dashboard() {
                 @{user.username} • <span style={{ color: colors.accent }}>{user.experienceTag || 'Beginner'} Level</span> •{' '}
                 <span style={{ color: colors.green || '#10b981' }}>👍 {user.likesReceived || 0} Endorsements</span>
               </p>
+              
+              {/* SOCIAL LINKS (Only show if they exist) */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                {user?.githubUrl && (
+                  <a 
+                    href={user.githubUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 14px', borderRadius: '8px',
+                      backgroundColor: '#24292e', color: '#fff', 
+                      textDecoration: 'none', fontSize: '13px', fontWeight: '700'
+                    }}
+                  >
+                    <Github size={16} /> GitHub
+                  </a>
+                )}
+
+                {user?.linkedinUrl && (
+                  <a 
+                    href={user.linkedinUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 14px', borderRadius: '8px',
+                      backgroundColor: '#0077b5', color: '#fff', 
+                      textDecoration: 'none', fontSize: '13px', fontWeight: '700'
+                    }}
+                  >
+                    <Linkedin size={16} /> LinkedIn
+                  </a>
+                )}
+              </div>
             </>
           ) : (
             <div className="dashboard-form-shell">
@@ -859,6 +1173,25 @@ export default function Dashboard() {
                 value={formData.college}
                 onChange={(event) => setFormData({ ...formData, college: event.target.value })}
               />
+
+              {/* NEW: SOCIAL LINK INPUTS */}
+              <label className="dashboard-label">LinkedIn Profile URL</label>
+              <input
+                className="dashboard-input"
+                type="url"
+                placeholder="https://linkedin.com/in/garvsharma"
+                value={formData.linkedinUrl}
+                onChange={(event) => setFormData({ ...formData, linkedinUrl: event.target.value })}
+              />
+
+              <label className="dashboard-label">GitHub Profile URL</label>
+              <input
+                className="dashboard-input"
+                type="url"
+                placeholder="https://github.com/garvsharma"
+                value={formData.githubUrl}
+                onChange={(event) => setFormData({ ...formData, githubUrl: event.target.value })}
+              />
             </div>
           )}
         </div>
@@ -882,22 +1215,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="dashboard-card">
+ <div className="dashboard-card">
+  
         <h2 className="dashboard-section-title">Tech Stack & Skills</h2>
         <div className="dashboard-section-body">
+          {/* ... [Keep all your existing skills code here] ... */}
           <div style={{ marginBottom: isEditing ? '18px' : 0 }}>
             {user.skill && user.skill.length > 0 ? (
               user.skill.map((skill) => (
                 <span key={`${user.username}-${skill}`} className="dashboard-skill">
                   {skill}
                   {isEditing ? (
-                    <button
-                      className="dashboard-skill-remove"
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                    >
-                      ×
-                    </button>
+                    <button className="dashboard-skill-remove" type="button" onClick={() => handleRemoveSkill(skill)}>×</button>
                   ) : null}
                 </span>
               ))
@@ -910,22 +1239,58 @@ export default function Dashboard() {
             <div className="dashboard-form-shell" style={{ maxWidth: '480px' }}>
               <label className="dashboard-label">Add Another Skill</label>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <input
-                  className="dashboard-input"
-                  style={{ flex: 1, marginBottom: 0, minWidth: '220px' }}
-                  type="text"
-                  placeholder="e.g., React, Go, Docker"
-                  value={newSkill}
-                  onChange={(event) => setNewSkill(event.target.value)}
-                />
-                <button className="dashboard-action" type="button" onClick={handleAddSkill}>
-                  Add Skill
-                </button>
+                <input className="dashboard-input" style={{ flex: 1, marginBottom: 0, minWidth: '220px' }} type="text" placeholder="e.g., React, Go, Docker" value={newSkill} onChange={(event) => setNewSkill(event.target.value)} />
+                <button className="dashboard-action" type="button" onClick={handleAddSkill}>Add Skill</button>
               </div>
             </div>
           ) : null}
         </div>
       </div>
+          
+      {/* --- NEW: GITHUB PORTFOLIO INTEGRATION --- */}
+      {user?.githubUrl && !isEditing && (
+        <div className="dashboard-card">
+          <h2 className="dashboard-section-title">Latest Open Source Work</h2>
+          <div className="dashboard-section-body" style={{ paddingBottom: 0 }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '20px', marginTop: 0 }}>
+            </p>
+          </div>
+          <GithubPortfolio githubUrl={user.githubUrl} />
+        </div>
+      )}
+       {/* --- SUGGESTED FOR YOU CAROUSEL --- */}
+      {!loadingSuggestions && suggestedUsers.length > 0 && !isEditing && (
+        <div className="carousel-section">
+          <h2 className="carousel-header">✨ Suggested Teammates For You</h2>
+          <div className="carousel-container">
+            {suggestedUsers.map(suggested => (
+              <Link to={`/profile/${suggested.username}`} key={suggested.id || suggested.username} className="carousel-card">
+                {suggested.profilePictureUrl ? (
+                  <img src={suggested.profilePictureUrl} alt={suggested.name} className="carousel-avatar" />
+                ) : (
+                  <div className="carousel-avatar">
+                    {(suggested.name || suggested.username).charAt(0).toUpperCase()}
+                  </div>
+                )}
+                
+                <h3 className="carousel-name">{suggested.name || suggested.username}</h3>
+                <p className="carousel-role">{suggested.branch || 'Developer'} • {suggested.experienceTag || 'Beginner'}</p>
+                
+                <div className="carousel-skills">
+                  {suggested.skill && suggested.skill.slice(0, 3).map(s => (
+                    <span key={s} className="carousel-skill-chip">{s}</span>
+                  ))}
+                  {suggested.skill && suggested.skill.length > 3 && (
+                    <span className="carousel-skill-chip">+{suggested.skill.length - 3}</span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* ------------------------------------------ */}
+
     </div>
   );
 }

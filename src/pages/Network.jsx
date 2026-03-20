@@ -19,8 +19,8 @@
 //     const fetchNetworkData = async () => {
 //       try {
 //         const [pendingRes, connRes] = await Promise.all([
-//           fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/pending`, { headers: { Authorization: `Bearer ${token}` } }),
-//           fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/accepted`, { headers: { Authorization: `Bearer ${token}` } })
+//           fetch(`http://localhost:8080/user/connect/pending`, { headers: { Authorization: `Bearer ${token}` } }),
+//           fetch(`http://localhost:8080/user/connect/accepted`, { headers: { Authorization: `Bearer ${token}` } })
 //         ]);
 
 //         if (pendingRes.ok) setPending(await pendingRes.json());
@@ -126,8 +126,8 @@ export default function Network() {
     const fetchNetworkData = async () => {
       try {
         const [pendingRes, connRes] = await Promise.all([
-          fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/pending`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/accepted`, { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`http://localhost:8080/user/connect/pending`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`http://localhost:8080/user/connect/accepted`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
         const nextUserFields = {};

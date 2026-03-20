@@ -1,7 +1,9 @@
+
 // import React, { useContext, useState } from 'react';
 // import { Link } from 'react-router-dom';
 // import { AuthContext } from '../context/AuthContext';
 // import { themePalette } from '../theme/palette';
+// import ConnectionButton from '../components/ConnectionButton';
 
 // export default function Search() {
 //   const { user, token } = useContext(AuthContext);
@@ -27,7 +29,8 @@
 //       if (searchType === 'skill') endpoint = `/home/search-by-skill/${query}`;
 //       if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
 
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
+//       // CHANGED TO LOCALHOST
+//       const response = await fetch(`http://localhost:8080${endpoint}`, {
 //         method: 'GET',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -47,8 +50,9 @@
 
 //   const handleLike = async (targetUsername) => {
 //     try {
+//       // CHANGED TO LOCALHOST
 //       const response = await fetch(
-//         `https://garvsharma9-teamfinder-api.hf.space/home/like/${targetUsername}?likerUsername=${user.username}`,
+//         `http://localhost:8080/home/like/${targetUsername}?likerUsername=${user.username}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -176,8 +180,6 @@
 
 //     .search-card-cover {
 //       height: 96px;
-//       background: linear-gradient(135deg, ${colors.blue}, #00c7fc 55%, ${colors.accent});
-//       opacity: 0.92;
 //     }
 
 //     .search-card-avatar-wrap {
@@ -233,13 +235,20 @@
 //       font-weight: 700;
 //     }
 
+//     .search-actions-row {
+//       display: flex;
+//       align-items: center;
+//       justify-content: center;
+//       gap: 12px;
+//       padding: 0 22px 22px;
+//     }
+
 //     .search-like-btn {
-//       margin: 0 22px 22px;
-//       border-radius: 16px;
+//       border-radius: 999px;
 //       border: 1px solid ${colors.blue};
 //       background: ${colors.primaryGhost};
 //       color: ${colors.blue};
-//       padding: 12px 16px;
+//       padding: 10px 18px;
 //       font-weight: 800;
 //       cursor: pointer;
 //       transition: transform 160ms ease, background 160ms ease, color 160ms ease;
@@ -330,9 +339,32 @@
 
 //           return (
 //             <div key={result.id || result.username} className="search-card">
-//               <div className="search-card-cover" />
+              
+//               <div className="search-card-cover" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
+//                 {result.bannerPictureUrl ? (
+//                   <img 
+//                     src={result.bannerPictureUrl} 
+//                     alt="Banner" 
+//                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+//                   />
+//                 ) : (
+//                   <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${colors.blue}, #00c7fc 55%, ${colors.accent})` }} />
+//                 )}
+//               </div>
+              
 //               <div className="search-card-avatar-wrap">
-//                 <div className="search-card-avatar">{(result.name || result.username).charAt(0).toUpperCase()}</div>
+//                 {result.profilePictureUrl ? (
+//                   <img 
+//                     src={result.profilePictureUrl} 
+//                     alt="Avatar" 
+//                     className="search-card-avatar" 
+//                     style={{ objectFit: 'cover', background: '#fff', padding: 0 }} 
+//                   />
+//                 ) : (
+//                   <div className="search-card-avatar">
+//                     {(result.name || result.username).charAt(0).toUpperCase()}
+//                   </div>
+//                 )}
 //               </div>
 
 //               <div className="search-card-content">
@@ -361,15 +393,18 @@
 //                 </p>
 //               </div>
 
-//               {!isSelf ? (
-//                 <button
-//                   className="search-like-btn"
-//                   onClick={() => handleLike(result.username)}
-//                   disabled={hasLiked}
-//                 >
-//                   {hasLiked ? 'Endorsed' : 'Endorse Profile'}
-//                 </button>
-//               ) : null}
+//               <div className="search-actions-row">
+//                 {!isSelf ? (
+//                   <button
+//                     className="search-like-btn"
+//                     onClick={() => handleLike(result.username)}
+//                     disabled={hasLiked}
+//                   >
+//                     {hasLiked ? 'Endorsed' : 'Endorse'}
+//                   </button>
+//                 ) : null}
+//                 <ConnectionButton profileUser={result} />
+//               </div>
 //             </div>
 //           );
 //         })}
@@ -385,21 +420,72 @@
 //   );
 // }
 
-import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+
+import React, { useContext, useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // ADDED: useLocation & useNavigate
 import { AuthContext } from '../context/AuthContext';
 import { themePalette } from '../theme/palette';
 import ConnectionButton from '../components/ConnectionButton';
 
 export default function Search() {
   const { user, token } = useContext(AuthContext);
+  const location = useLocation(); // ADDED
+  const navigate = useNavigate(); // ADDED
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState('skill');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isEventFilter, setIsEventFilter] = useState(false); // ADDED: To track if we are viewing event attendees
 
   const colors = themePalette;
+
+  // ADDED: The interception logic for the Competition Filter
+  useEffect(() => {
+    const fetchInterestedUsers = async () => {
+      const queryParams = new URLSearchParams(location.search);
+      const interestedUsernamesStr = queryParams.get('interested');
+
+      if (interestedUsernamesStr) {
+        setLoading(true);
+        setIsEventFilter(true);
+        setError('');
+        
+        // Convert the string back into an array: ["garv", "john"]
+        const usernameArray = interestedUsernamesStr.split(',');
+
+        try {
+          // Hit the new batch endpoint
+          const response = await fetch('http://localhost:8080/user/users/batch', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` // <-- ADD THIS LINE!
+            },
+            body: JSON.stringify({ usernames: usernameArray })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setResults(Array.isArray(data) ? data : []);
+          } else {
+            throw new Error('Failed to fetch event teammates.');
+          }
+        } catch (err) {
+          setError("Could not load teammates for this event.");
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Reset if parameter is removed
+        setIsEventFilter(false);
+      }
+    };
+
+    fetchInterestedUsers();
+  }, [location.search]);
+
 
   const handleSearch = async (event) => {
     event.preventDefault();
@@ -408,6 +494,12 @@ export default function Search() {
     setLoading(true);
     setError('');
     setResults([]);
+    
+    // Clear any event filters if the user does a manual search
+    if (isEventFilter) {
+      navigate('/search', { replace: true });
+      setIsEventFilter(false);
+    }
 
     try {
       let endpoint = '';
@@ -415,8 +507,7 @@ export default function Search() {
       if (searchType === 'skill') endpoint = `/home/search-by-skill/${query}`;
       if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
 
-      // CHANGED TO LOCALHOST
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
+      const response = await fetch(`http://localhost:8080${endpoint}`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -436,9 +527,8 @@ export default function Search() {
 
   const handleLike = async (targetUsername) => {
     try {
-      // CHANGED TO LOCALHOST
       const response = await fetch(
-        `https://garvsharma9-teamfinder-api.hf.space/home/like/${targetUsername}?likerUsername=${user.username}`,
+        `http://localhost:8080/home/like/${targetUsername}?likerUsername=${user.username}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -462,6 +552,12 @@ export default function Search() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const clearEventFilter = () => {
+    navigate('/search', { replace: true });
+    setResults([]);
+    setIsEventFilter(false);
   };
 
   const styleSheet = `
@@ -718,6 +814,26 @@ export default function Search() {
         </p>
       ) : null}
 
+      {/* ADDED: Event Attendee Alert Banner */}
+      {isEventFilter && !loading && !error && (
+        <div style={{
+          marginBottom: '24px', padding: '16px 20px', background: colors.primaryGhost,
+          border: `1px solid ${colors.blue}`, borderRadius: '16px', color: colors.blueStrong,
+          fontWeight: '700', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'
+        }}>
+          <span>👋 Showing {results.length} people interested in your selected event.</span>
+          <button 
+            onClick={clearEventFilter}
+            style={{
+              background: 'transparent', border: 'none', color: colors.blue, cursor: 'pointer',
+              textDecoration: 'underline', fontWeight: '700', fontSize: '14px'
+            }}
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
+
       <div className="search-grid">
         {results.map((result) => {
           const hasLiked = result.likedBy && result.likedBy.includes(user?.username);
@@ -796,7 +912,7 @@ export default function Search() {
         })}
       </div>
 
-      {!loading && results.length === 0 && !error ? (
+      {!loading && results.length === 0 && !error && !isEventFilter ? (
         <div style={{ textAlign: 'center', padding: '100px 20px', opacity: 0.7 }}>
           <span style={{ fontSize: '60px' }}>🔍</span>
           <h3 style={{ color: colors.textSecondary }}>Search the network to find talent.</h3>

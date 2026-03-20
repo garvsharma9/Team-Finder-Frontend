@@ -1,7 +1,9 @@
+
 // import React, { useContext, useEffect, useState } from 'react';
 // import { useNavigate, useParams } from 'react-router-dom';
 // import { AuthContext } from '../context/AuthContext';
 // import { themePalette } from '../theme/palette';
+// import ConnectionButton from '../components/ConnectionButton';
 
 // export default function PublicProfile() {
 //   const { username } = useParams();
@@ -16,7 +18,8 @@
 //   useEffect(() => {
 //     const fetchProfile = async () => {
 //       try {
-//         const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${username}`, {
+//         // CHANGED TO LOCALHOST
+//         const response = await fetch(`http://localhost:8080/home/search-by-username/${username}`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
 
@@ -74,11 +77,11 @@
 
 //     .public-cover {
 //       height: 190px;
-//       background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc 55%, ${colors.accent});
 //     }
 
 //     .public-avatar-row {
 //       display: flex;
+//       justify-content: space-between;
 //       align-items: flex-end;
 //       padding: 0 30px;
 //       margin-top: -66px;
@@ -149,9 +152,33 @@
 //       </button>
 
 //       <div className="public-profile-card">
-//         <div className="public-cover" />
+//         <div className="public-cover" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
+//           {profileUser.bannerPictureUrl ? (
+//             <img 
+//               src={profileUser.bannerPictureUrl} 
+//               alt="Banner" 
+//               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+//             />
+//           ) : (
+//             <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${colors.blueStrong}, #00c7fc 55%, ${colors.accent})` }} />
+//           )}
+//         </div>
+
 //         <div className="public-avatar-row">
-//           <div className="public-avatar">{(profileUser.name || profileUser.username).charAt(0).toUpperCase()}</div>
+//           {profileUser.profilePictureUrl ? (
+//             <img 
+//               src={profileUser.profilePictureUrl} 
+//               alt="Avatar" 
+//               className="public-avatar" 
+//               style={{ objectFit: 'cover', background: '#fff', padding: 0 }} 
+//             />
+//           ) : (
+//             <div className="public-avatar">
+//               {(profileUser.name || profileUser.username).charAt(0).toUpperCase()}
+//             </div>
+//           )}
+          
+//           <ConnectionButton profileUser={profileUser} />
 //         </div>
 
 //         <div style={{ padding: '0 30px 30px' }}>
@@ -163,7 +190,7 @@
 //           </p>
 //           <p style={{ margin: 0, color: colors.textSecondary, fontWeight: '700' }}>
 //             @{profileUser.username} • <span style={{ color: colors.accent }}>{profileUser.experienceTag || 'Beginner'} Level</span> •{' '}
-//             <span style={{ color: colors.green }}>👍 {profileUser.likesReceived || 0} Endorsements</span>
+//             <span style={{ color: colors.green || '#10b981' }}>👍 {profileUser.likesReceived || 0} Endorsements</span>
 //           </p>
 //         </div>
 //       </div>
@@ -192,12 +219,16 @@
 //     </div>
 //   );
 // }
+
+
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { themePalette } from '../theme/palette';
 import ConnectionButton from '../components/ConnectionButton';
-
+import { Github, Linkedin } from 'lucide-react'; // Added icons
+// import { Github, Linkedin } from 'lucide-react'; 
+import GithubPortfolio from '../components/GithubPortfolio'; // Add this line!
 export default function PublicProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -211,8 +242,7 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // CHANGED TO LOCALHOST
-        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${username}`, {
+        const response = await fetch(`http://localhost:8080/home/search-by-username/${username}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -323,6 +353,7 @@ export default function PublicProfile() {
       color: ${colors.accent};
       font-size: 13px;
       font-weight: 800;
+      text-transform: capitalize;
     }
   `;
 
@@ -385,6 +416,41 @@ export default function PublicProfile() {
             @{profileUser.username} • <span style={{ color: colors.accent }}>{profileUser.experienceTag || 'Beginner'} Level</span> •{' '}
             <span style={{ color: colors.green || '#10b981' }}>👍 {profileUser.likesReceived || 0} Endorsements</span>
           </p>
+          
+          {/* SOCIAL LINKS */}
+          <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+            {profileUser?.githubUrl && (
+              <a 
+                href={profileUser.githubUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 14px', borderRadius: '8px',
+                  backgroundColor: '#24292e', color: '#fff', 
+                  textDecoration: 'none', fontSize: '13px', fontWeight: '700'
+                }}
+              >
+                <Github size={16} /> GitHub
+              </a>
+            )}
+
+            {profileUser?.linkedinUrl && (
+              <a 
+                href={profileUser.linkedinUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 14px', borderRadius: '8px',
+                  backgroundColor: '#0077b5', color: '#fff', 
+                  textDecoration: 'none', fontSize: '13px', fontWeight: '700'
+                }}
+              >
+                <Linkedin size={16} /> LinkedIn
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -409,6 +475,20 @@ export default function PublicProfile() {
           )}
         </div>
       </div>
+
+      {/* --- NEW: GITHUB PORTFOLIO INTEGRATION --- */}
+      {profileUser?.githubUrl && (
+        <div className="public-profile-card">
+          <h2 className="public-section-title">Latest Open Source Work</h2>
+          <div className="public-section-body" style={{ paddingBottom: 0 }}>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '20px', marginTop: 0 }}>
+            </p>
+          </div>
+          <GithubPortfolio githubUrl={profileUser.githubUrl} />
+        </div>
+      )}
+      {/* ------------------------------------------ */}
+
     </div>
   );
 }

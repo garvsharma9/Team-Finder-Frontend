@@ -1,5 +1,7 @@
+
 // import React, { useContext, useEffect, useState } from 'react';
 // import { AuthContext } from '../context/AuthContext';
+// import { ThumbsUp, ThumbsDown } from 'lucide-react'; // ADDED: Icon imports!
 
 // export default function Events() {
 //   const { user, token } = useContext(AuthContext);
@@ -18,13 +20,32 @@
 //     clubName: '',
 //   });
 
-//   const colors = themePalette;
+//   // ADDED: Reconstructed the missing color palette!
+//   const colors = {
+//     blue: '#0a66c2',
+//     blueStrong: '#004182',
+//     glass: 'rgba(255, 255, 255, 0.7)',
+//     border: 'rgba(255, 255, 255, 0.2)',
+//     shadow: '0 8px 32px rgba(0,0,0,0.06)',
+//     shadowStrong: '0 20px 60px rgba(0,0,0,0.12)',
+//     mutedSurface: '#f3f2ef',
+//     textMain: '#111827',
+//     textSecondary: '#6b7280',
+//     glassStrong: 'rgba(255, 255, 255, 0.9)',
+//     red: '#ef4444',
+//     accent: '#f59e0b',
+//     primaryGhost: 'rgba(10, 102, 194, 0.1)',
+//     accentGhost: 'rgba(245, 158, 11, 0.1)',
+//     glassSoft: 'rgba(255, 255, 255, 0.4)',
+//     dangerGhost: 'rgba(239, 68, 68, 0.1)'
+//   };
+
 //   const isPresident =
 //     user && user.roles && (user.roles.includes('PRESIDENT') || user.roles.includes('ROLE_PRESIDENT'));
 
 //   const fetchEvents = async () => {
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/all', {
+//       const response = await fetch('http://localhost:8080/events/all', {
 //         method: 'GET',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -46,6 +67,66 @@
 //     }
 //   }, [token]);
 
+//   // ADDED: Missing Like Function
+//   const handleLikeEvent = async (eventId) => {
+//     if (!user) return; 
+//     setEvents(prevEvents => prevEvents.map(evt => {
+//       if (evt.id === eventId) {
+//         const hasLiked = evt.like?.includes(user.username);
+//         let newLike = evt.like || [];
+//         let newDislike = evt.dislike || [];
+
+//         if (hasLiked) {
+//           newLike = newLike.filter(name => name !== user.username);
+//         } else {
+//           newLike = [...newLike, user.username];
+//           newDislike = newDislike.filter(name => name !== user.username);
+//         }
+//         return { ...evt, like: newLike, dislike: newDislike };
+//       }
+//       return evt;
+//     }));
+
+//     try {
+//       await fetch(`http://localhost:8080/events/${eventId}/like?username=${user.username}`, {
+//         method: 'POST',
+//         headers: { 'Authorization': `Bearer ${token}` }
+//       });
+//     } catch (err) {
+//       console.error("Failed to like event", err);
+//     }
+//   };
+
+//   // ADDED: Missing Dislike Function
+//   const handleDislikeEvent = async (eventId) => {
+//     if (!user) return; 
+//     setEvents(prevEvents => prevEvents.map(evt => {
+//       if (evt.id === eventId) {
+//         const hasDisliked = evt.dislike?.includes(user.username);
+//         let newLike = evt.like || [];
+//         let newDislike = evt.dislike || [];
+
+//         if (hasDisliked) {
+//           newDislike = newDislike.filter(name => name !== user.username);
+//         } else {
+//           newDislike = [...newDislike, user.username];
+//           newLike = newLike.filter(name => name !== user.username);
+//         }
+//         return { ...evt, like: newLike, dislike: newDislike };
+//       }
+//       return evt;
+//     }));
+
+//     try {
+//       await fetch(`http://localhost:8080/events/${eventId}/dislike?username=${user.username}`, {
+//         method: 'POST',
+//         headers: { 'Authorization': `Bearer ${token}` }
+//       });
+//     } catch (err) {
+//       console.error("Failed to dislike event", err);
+//     }
+//   };
+
 //   const handleCreateEvent = async (event) => {
 //     event.preventDefault();
 //     setIsSubmitting(true);
@@ -53,7 +134,7 @@
 //     const eventPayload = { ...formData, postedBy: user.username };
 
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/add', {
+//       const response = await fetch('http://localhost:8080/events/add', {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -88,7 +169,7 @@
 //     if (!window.confirm('Are you sure you want to delete this official event?')) return;
 
 //     try {
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
+//       const response = await fetch(`http://localhost:8080/events/delete/${eventId}`, {
 //         method: 'DELETE',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -112,7 +193,6 @@
 //     };
 //   };
 
-//   // --- REWRITTEN GLASSY UI STYLES ---
 //   const styleSheet = `
 //     .events-page {
 //       max-width: 920px;
@@ -315,7 +395,9 @@
 
 //       <div className="events-header">
 //         <div>
-//           <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '800', color: colors.textMain }}>Campus Events</h1>
+//       <h1 className="dynamic-heading" style={{ margin: 0, fontSize: '32px', fontWeight: '800' }}>
+//         Campus Events
+//       </h1>
 //           <p style={{ margin: '8px 0 0 0', color: colors.textSecondary }}>
 //             Official hackathons, competitions, and club activities from your campus ecosystem.
 //           </p>
@@ -452,7 +534,7 @@
 //                   </p>
 //                 </div>
 //               </div>
-//               <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+//               <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 px-6 pb-2">
                 
 //                 <button 
 //                   onClick={() => handleLikeEvent(event.id)}
@@ -510,11 +592,13 @@
 
 
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ADDED: For navigation
 import { AuthContext } from '../context/AuthContext';
-import { ThumbsUp, ThumbsDown } from 'lucide-react'; // ADDED: Icon imports!
+import { ThumbsUp, ThumbsDown, Users } from 'lucide-react'; // ADDED: Users icon
 
 export default function Events() {
   const { user, token } = useContext(AuthContext);
+  const navigate = useNavigate(); // ADDED
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -530,7 +614,6 @@ export default function Events() {
     clubName: '',
   });
 
-  // ADDED: Reconstructed the missing color palette!
   const colors = {
     blue: '#0a66c2',
     blueStrong: '#004182',
@@ -555,7 +638,7 @@ export default function Events() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/all', {
+      const response = await fetch('http://localhost:8080/events/all', {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -577,7 +660,6 @@ export default function Events() {
     }
   }, [token]);
 
-  // ADDED: Missing Like Function
   const handleLikeEvent = async (eventId) => {
     if (!user) return; 
     setEvents(prevEvents => prevEvents.map(evt => {
@@ -598,7 +680,7 @@ export default function Events() {
     }));
 
     try {
-      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/like?username=${user.username}`, {
+      await fetch(`http://localhost:8080/events/${eventId}/like?username=${user.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -607,7 +689,6 @@ export default function Events() {
     }
   };
 
-  // ADDED: Missing Dislike Function
   const handleDislikeEvent = async (eventId) => {
     if (!user) return; 
     setEvents(prevEvents => prevEvents.map(evt => {
@@ -628,13 +709,23 @@ export default function Events() {
     }));
 
     try {
-      await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/${eventId}/dislike?username=${user.username}`, {
+      await fetch(`http://localhost:8080/events/${eventId}/dislike?username=${user.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
     } catch (err) {
       console.error("Failed to dislike event", err);
     }
+  };
+
+  // ADDED: Navigation logic for Find Teammates
+  const handleFindTeammates = (eventPost) => {
+    if (!eventPost.like || eventPost.like.length === 0) {
+      alert("No one has shown interest in this event yet! Be the first to like it.");
+      return;
+    }
+    const usernamesString = eventPost.like.join(',');
+    navigate(`/search?interested=${usernamesString}`);
   };
 
   const handleCreateEvent = async (event) => {
@@ -644,7 +735,7 @@ export default function Events() {
     const eventPayload = { ...formData, postedBy: user.username };
 
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/events/add', {
+      const response = await fetch('http://localhost:8080/events/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -679,7 +770,7 @@ export default function Events() {
     if (!window.confirm('Are you sure you want to delete this official event?')) return;
 
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/events/delete/${eventId}`, {
+      const response = await fetch(`http://localhost:8080/events/delete/${eventId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1068,6 +1159,15 @@ export default function Events() {
                 >
                   <ThumbsDown className="w-4 h-4" />
                   <span>{event.dislike?.length || 0}</span>
+                </button>
+
+                {/* ADDED: Find Teammates Button */}
+                <button 
+                  onClick={() => handleFindTeammates(event)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors ml-auto"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Find Teammates</span>
                 </button>
 
               </div>

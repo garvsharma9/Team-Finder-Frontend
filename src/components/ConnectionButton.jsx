@@ -43,7 +43,7 @@ export default function ConnectionButton({
   const handleAction = async (actionEndpoint, optimisticUpdate) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/user/connect/${actionEndpoint}/${profileUser.username}`, {
+      const response = await fetch(`http://localhost:8080/user/connect/${actionEndpoint}/${profileUser.username}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
