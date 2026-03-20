@@ -1,8 +1,9 @@
-// import React, { useState, useContext } from 'react';
+// import React, { useState, useContext, useEffect } from 'react';
 // import { Link, useNavigate } from 'react-router-dom';
 // import { themePalette } from '../theme/palette';
 // import { AuthContext } from '../context/AuthContext';
 // import { GoogleLogin } from '@react-oauth/google';
+// import { Github } from 'lucide-react';
 
 // export default function Signup() {
 //   const navigate = useNavigate();
@@ -23,6 +24,12 @@
 //   const [error, setError] = useState('');
 //   const [message, setMessage] = useState('');
 //   const [isLoading, setIsLoading] = useState(false);
+
+
+//   const initiateGithubLogin = () => {
+//     // Direct the user to the Login page so they can use the working GitHub button there.
+//     navigate('/login');
+//   };
 
 //   //google login
 //   const handleGoogleSuccess = async (credentialResponse) => {
@@ -335,15 +342,31 @@
 
 //         {!otpSent ? (
 //           <>
-//             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-//               <GoogleLogin
-//                 onSuccess={handleGoogleSuccess}
-//                 onError={() => {
-//                   console.log('Google Login Failed');
+//             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+//               <div style={{ display: 'flex', justifyContent: 'center' }}>
+//                 <GoogleLogin
+//                   onSuccess={handleGoogleSuccess}
+//                   onError={() => {
+//                     console.log('Google Login Failed');
+//                   }}
+//                   useOneTap 
+//                 />
+//               </div>
+
+//               <button 
+//                 type="button"
+//                 onClick={initiateGithubLogin}
+//                 style={{
+//                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+//                   width: '100%', padding: '10px', borderRadius: '4px',
+//                   backgroundColor: '#24292e', color: 'white', border: 'none',
+//                   fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'sans-serif'
 //                 }}
-//                 useOneTap 
-//               />
+//               >
+//                 <Github size={18} /> Continue with GitHub
+//               </button>
 //             </div>
+            
 //             <div style={{ textAlign: 'center', margin: '15px 0', color: '#888' }}>
 //               or continue with email
 //             </div>
@@ -494,6 +517,7 @@
 //   );
 // }
 
+
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { themePalette } from '../theme/palette';
@@ -521,41 +545,10 @@ export default function Signup() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- GITHUB LOGIN LOGIC ---
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-
-    if (code) {
-      setIsLoading(true);
-      setMessage("Authenticating with GitHub...");
-      
-      window.history.replaceState({}, document.title, window.location.pathname);
-
-      fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/github', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("GitHub Authentication Failed");
-        return res.json();
-      })
-      .then(data => {
-        login(data.user, data.token);
-        navigate('/feed');
-      })
-      .catch(err => {
-        setError(err.message);
-        setIsLoading(false);
-      });
-    }
-  }, [login, navigate]);
 
   const initiateGithubLogin = () => {
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectUri = window.location.origin + window.location.pathname; 
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
+    // Direct the user to the Login page so they can use the working GitHub button there.
+    navigate('/login');
   };
 
   //google login
@@ -662,6 +655,7 @@ export default function Signup() {
       position: relative;
       overflow: hidden;
       padding: 28px 20px;
+      box-sizing: border-box;
     }
 
     .signup-blob {
@@ -699,6 +693,7 @@ export default function Signup() {
       box-shadow: ${colors.shadowStrong};
       position: relative;
       z-index: 1;
+      box-sizing: border-box;
     }
 
     .signup-title {
@@ -791,6 +786,7 @@ export default function Signup() {
       padding: 15px 18px;
       font-weight: 800;
       cursor: pointer;
+      box-sizing: border-box;
       transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
 
@@ -826,6 +822,7 @@ export default function Signup() {
       text-align: center;
       font-size: 14px;
       font-weight: 700;
+      box-sizing: border-box;
     }
 
     .signup-error {
@@ -843,13 +840,38 @@ export default function Signup() {
       to { transform: translate(18px, 16px) scale(1.08); }
     }
 
+    /* --- MOBILE RESPONSIVE TWEAKS --- */
     @media (max-width: 640px) {
-      .signup-card {
-        padding: 28px 22px;
+      .signup-page {
+        padding: 16px;
       }
-
+      .signup-card {
+        padding: 30px 20px;
+        border-radius: 24px;
+      }
+      .signup-title {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+      .signup-subtitle {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
       .signup-row {
         grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .signup-input {
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+      .signup-button,
+      .signup-button-secondary {
+        padding: 14px;
+      }
+      .signup-otp {
+        font-size: 24px;
+        letter-spacing: 8px;
       }
     }
   `;
@@ -887,7 +909,8 @@ export default function Signup() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                   width: '100%', padding: '10px', borderRadius: '4px',
                   backgroundColor: '#24292e', color: 'white', border: 'none',
-                  fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'sans-serif'
+                  fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'sans-serif',
+                  boxSizing: 'border-box'
                 }}
               >
                 <Github size={18} /> Continue with GitHub

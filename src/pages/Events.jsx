@@ -1,10 +1,11 @@
-
 // import React, { useContext, useEffect, useState } from 'react';
+// import { useNavigate } from 'react-router-dom'; // ADDED: For navigation
 // import { AuthContext } from '../context/AuthContext';
-// import { ThumbsUp, ThumbsDown } from 'lucide-react'; // ADDED: Icon imports!
+// import { ThumbsUp, ThumbsDown, Users } from 'lucide-react'; // ADDED: Users icon
 
 // export default function Events() {
 //   const { user, token } = useContext(AuthContext);
+//   const navigate = useNavigate(); // ADDED
 //   const [events, setEvents] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState('');
@@ -20,7 +21,6 @@
 //     clubName: '',
 //   });
 
-//   // ADDED: Reconstructed the missing color palette!
 //   const colors = {
 //     blue: '#0a66c2',
 //     blueStrong: '#004182',
@@ -67,7 +67,6 @@
 //     }
 //   }, [token]);
 
-//   // ADDED: Missing Like Function
 //   const handleLikeEvent = async (eventId) => {
 //     if (!user) return; 
 //     setEvents(prevEvents => prevEvents.map(evt => {
@@ -97,7 +96,6 @@
 //     }
 //   };
 
-//   // ADDED: Missing Dislike Function
 //   const handleDislikeEvent = async (eventId) => {
 //     if (!user) return; 
 //     setEvents(prevEvents => prevEvents.map(evt => {
@@ -125,6 +123,16 @@
 //     } catch (err) {
 //       console.error("Failed to dislike event", err);
 //     }
+//   };
+
+//   // ADDED: Navigation logic for Find Teammates
+//   const handleFindTeammates = (eventPost) => {
+//     if (!eventPost.like || eventPost.like.length === 0) {
+//       alert("No one has shown interest in this event yet! Be the first to like it.");
+//       return;
+//     }
+//     const usernamesString = eventPost.like.join(',');
+//     navigate(`/search?interested=${usernamesString}`);
 //   };
 
 //   const handleCreateEvent = async (event) => {
@@ -560,6 +568,15 @@
 //                   <span>{event.dislike?.length || 0}</span>
 //                 </button>
 
+//                 {/* ADDED: Find Teammates Button */}
+//                 <button 
+//                   onClick={() => handleFindTeammates(event)}
+//                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors ml-auto"
+//                 >
+//                   <Users className="w-4 h-4" />
+//                   <span>Find Teammates</span>
+//                 </button>
+
 //               </div>
 
 
@@ -592,13 +609,13 @@
 
 
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ADDED: For navigation
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ThumbsUp, ThumbsDown, Users } from 'lucide-react'; // ADDED: Users icon
+import { ThumbsUp, ThumbsDown, Users } from 'lucide-react';
 
 export default function Events() {
   const { user, token } = useContext(AuthContext);
-  const navigate = useNavigate(); // ADDED
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -718,7 +735,6 @@ export default function Events() {
     }
   };
 
-  // ADDED: Navigation logic for Find Teammates
   const handleFindTeammates = (eventPost) => {
     if (!eventPost.like || eventPost.like.length === 0) {
       alert("No one has shown interest in this event yet! Be the first to like it.");
@@ -978,14 +994,47 @@ export default function Events() {
       padding: 62px 24px;
     }
 
+    /* --- RESPONSIVE MOBILE FIXES --- */
     @media (max-width: 720px) {
+      .events-page {
+        margin-top: 20px;
+        padding: 0 12px;
+      }
+      .events-form {
+        padding: 20px 16px;
+      }
       .events-row,
       .events-row-three {
         grid-template-columns: 1fr;
       }
-
       .events-card-body {
+        padding: 20px 16px;
         flex-direction: column;
+      }
+      .dynamic-heading {
+        font-size: 26px !important;
+      }
+      .events-card-footer {
+        padding: 16px;
+      }
+      .events-button {
+        width: 100%; /* Make CTA button full width on mobile */
+      }
+      
+      /* Target the action bar (likes/find teammates) */
+      .events-action-bar {
+        flex-wrap: wrap;
+        padding: 16px 16px 8px !important;
+        gap: 10px !important;
+      }
+      .events-action-bar > button.ml-auto {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+      }
+      .events-action-bar > button:not(.ml-auto) {
+        flex: 1;
+        justify-content: center;
       }
     }
   `;
@@ -1135,7 +1184,9 @@ export default function Events() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 px-6 pb-2">
+              
+              {/* ADDED .events-action-bar class here for mobile targeting */}
+              <div className="events-action-bar flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 px-6 pb-2">
                 
                 <button 
                   onClick={() => handleLikeEvent(event.id)}
@@ -1161,10 +1212,9 @@ export default function Events() {
                   <span>{event.dislike?.length || 0}</span>
                 </button>
 
-                {/* ADDED: Find Teammates Button */}
                 <button 
                   onClick={() => handleFindTeammates(event)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors ml-auto"
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
                 >
                   <Users className="w-4 h-4" />
                   <span>Find Teammates</span>

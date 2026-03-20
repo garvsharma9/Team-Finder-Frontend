@@ -1,4 +1,5 @@
 // import React, { useContext, useEffect, useState } from 'react';
+// import { Link } from 'react-router-dom';
 // import { AuthContext } from '../context/AuthContext';
 // import { themePalette } from '../theme/palette';
 
@@ -9,6 +10,10 @@
 //   const [error, setError] = useState('');
 //   const [isExpanded, setIsExpanded] = useState(false);
 //   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+//   // --- NEW: Search State ---
+//   const [searchQuery, setSearchQuery] = useState('');
+
 //   const [formData, setFormData] = useState({
 //     competitionName: '',
 //     competitionDate: '',
@@ -21,7 +26,7 @@
 
 //   const fetchPosts = async () => {
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/all', {
+//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/feed', {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -109,12 +114,80 @@
 //     }
 //   };
 
+//   const handleDeletePost = async (postId) => {
+//     if (!window.confirm("Are you sure you want to remove this requirement from the team feed? Your team and chat will stay active.")) return;
+
+//     try {
+//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-feed-post/${postId}`, {
+//         method: 'DELETE',
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       if (response.ok) {
+//         setPosts((previousPosts) => previousPosts.filter((post) => post.id !== postId));
+//       } else {
+//         alert("Failed to delete post.");
+//       }
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   // --- NEW: Filter Logic ---
+//   // This filters the posts dynamically as the user types
+//   // const filteredPosts = posts.filter(post => {
+//   //   if (!searchQuery) return true; // If search is empty, show everything
+    
+//   //   const query = searchQuery.toLowerCase().trim();
+//   //   const position = (post.position || '').toLowerCase();
+//   //   const compName = (post.competitionName || '').toLowerCase();
+    
+//   //   // Checks if the search query matches the position OR the competition name
+//   //   return position.includes(query) || compName.includes(query);
+//   // });
+
+//   // --- NEW: Super-Powered Filter Logic ---
+//   // This filters the posts dynamically as the user types across ALL data points
+//   const filteredPosts = posts.filter(post => {
+//     if (!searchQuery) return true; // If search is empty, show everything
+    
+//     const query = searchQuery.toLowerCase().trim();
+    
+//     // 1. Object.values(post) grabs every piece of data (username, dates, roles, team name)
+//     // 2. .flat() ensures if there are any arrays (like acceptedUsernames), they are included
+//     // 3. .join(' ') turns all that data into one massive, searchable sentence
+//     const allPostData = Object.values(post).flat().join(' ').toLowerCase();
+    
+//     // Check if the user's search word exists ANYWHERE in that massive sentence
+//     return allPostData.includes(query);
+//   });
+
 //   const styleSheet = `
 //     .feed-page {
 //       max-width: 660px;
 //       margin: 32px auto;
 //       padding: 0 20px;
 //       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+//     }
+
+//     /* --- NEW: Search Bar Styles --- */
+//     .feed-search-input {
+//       width: 100%;
+//       border-radius: 20px;
+//       border: 1px solid ${colors.border};
+//       background: ${colors.glass};
+//       backdrop-filter: blur(20px);
+//       color: ${colors.textMain};
+//       padding: 16px 22px;
+//       font-size: 16px;
+//       margin-bottom: 24px;
+//       box-shadow: ${colors.shadow};
+//       outline: none;
+//       transition: border-color 0.2s, box-shadow 0.2s;
+//     }
+//     .feed-search-input:focus {
+//       border-color: ${colors.blue};
+//       box-shadow: 0 8px 24px rgba(79, 140, 255, 0.15);
 //     }
 
 //     .feed-card {
@@ -149,6 +222,8 @@
 //       font-weight: 800;
 //       background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc);
 //       box-shadow: 0 14px 28px rgba(79, 140, 255, 0.22);
+//       overflow: hidden;
+//       padding: 0;
 //     }
 
 //     .feed-trigger {
@@ -243,9 +318,21 @@
 
 //     .feed-post-header {
 //       display: flex;
-//       gap: 14px;
+//       justify-content: space-between;
 //       padding: 20px 20px 10px;
+//       align-items: flex-start;
+//     }
+
+//     .feed-user-link {
+//       text-decoration: none;
+//       display: flex;
 //       align-items: center;
+//       gap: 14px;
+//       transition: opacity 0.2s;
+//     }
+
+//     .feed-user-link:hover {
+//       opacity: 0.85;
 //     }
 
 //     .feed-post-body {
@@ -292,6 +379,22 @@
 //       cursor: not-allowed;
 //     }
 
+//     .delete-btn {
+//       background: transparent;
+//       border: none;
+//       color: ${colors.red};
+//       font-size: 13px;
+//       font-weight: 800;
+//       cursor: pointer;
+//       padding: 6px 10px;
+//       border-radius: 8px;
+//       transition: background 0.2s;
+//     }
+
+//     .delete-btn:hover {
+//       background: ${colors.dangerGhost};
+//     }
+
 //     @media (max-width: 640px) {
 //       .feed-row {
 //         grid-template-columns: 1fr;
@@ -311,9 +414,21 @@
 //     <div className="feed-page">
 //       <style>{styleSheet}</style>
 
+//       {/* CREATE POST SECTION */}
 //       <div className="feed-card feed-create-box">
 //         <div className="feed-create-header">
-//           <div className="feed-avatar">{user.username.charAt(0).toUpperCase()}</div>
+//           {/* USER'S AVATAR */}
+//           <div className="feed-avatar">
+//             {user.profilePictureUrl ? (
+//               <img 
+//                 src={user.profilePictureUrl} 
+//                 alt="Me" 
+//                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+//               />
+//             ) : (
+//               user.username.charAt(0).toUpperCase()
+//             )}
+//           </div>
 //           <button type="button" className="feed-trigger" onClick={() => setIsExpanded(true)}>
 //             Looking for teammates? Start a post...
 //           </button>
@@ -380,6 +495,15 @@
 //         ) : null}
 //       </div>
 
+//       {/* --- NEW: Search Bar --- */}
+//       <input
+//         className="feed-search-input"
+//         type="text"
+//         placeholder="🔍 Search roles, usernames, teams, dates..."
+//         value={searchQuery}
+//         onChange={(e) => setSearchQuery(e.target.value)}
+//       />
+
 //       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', opacity: 0.78 }}>
 //         <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${colors.border}` }} />
 //         <span style={{ fontSize: '13px', fontWeight: '700', color: colors.textSecondary }}>
@@ -390,8 +514,9 @@
 //       {loading ? <p style={{ textAlign: 'center', color: colors.textSecondary }}>Fetching requirements...</p> : null}
 //       {error ? <p style={{ color: colors.red, textAlign: 'center' }}>{error}</p> : null}
 
-//       {posts.length > 0 ? (
-//         posts.map((post) => {
+//       {/* FEED POSTS LIST */}
+//       {filteredPosts.length > 0 ? (
+//         filteredPosts.map((post) => {
 //           const isOwner = post.username === user.username;
 //           const hasRequested = post.requestedUsernames && post.requestedUsernames.includes(user.username);
 //           const isAccepted = post.acceptedUsernames && post.acceptedUsernames.includes(user.username);
@@ -417,25 +542,44 @@
 //           return (
 //             <div key={post.id} className="feed-card feed-post">
 //               <div className="feed-post-header">
-//                 <div
-//                   className="feed-avatar"
-//                   style={{
-//                     width: '42px',
-//                     height: '42px',
-//                     borderRadius: '14px',
-//                     background: colors.primaryGhost,
-//                     color: colors.blue,
-//                     boxShadow: 'none',
-//                   }}
-//                 >
-//                   {post.username.charAt(0).toUpperCase()}
-//                 </div>
-//                 <div>
-//                   <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: colors.textMain }}>{post.username}</h4>
-//                   <p style={{ margin: '3px 0 0 0', fontSize: '13px', color: colors.textSecondary }}>
-//                     📅 {post.competitionDate} • {post.competitionName}
-//                   </p>
-//                 </div>
+                
+//                 {/* POST AUTHOR AVATAR (Clickable Link) */}
+//                 <Link to={`/profile/${post.username}`} className="feed-user-link">
+//                   <div
+//                     className="feed-avatar"
+//                     style={{
+//                       width: '42px',
+//                       height: '42px',
+//                       borderRadius: '14px',
+//                       background: colors.primaryGhost,
+//                       color: colors.blue,
+//                       boxShadow: 'none',
+//                     }}
+//                   >
+//                     {post.profilePictureUrl ? (
+//                       <img 
+//                         src={post.profilePictureUrl} 
+//                         alt="Avatar" 
+//                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+//                       />
+//                     ) : (
+//                       post.username.charAt(0).toUpperCase()
+//                     )}
+//                   </div>
+//                   <div>
+//                     <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: colors.textMain }}>{post.username}</h4>
+//                     <p style={{ margin: '3px 0 0 0', fontSize: '13px', color: colors.textSecondary }}>
+//                       📅 {post.competitionDate} • {post.competitionName}
+//                     </p>
+//                   </div>
+//                 </Link>
+
+//                 {/* DELETE BUTTON (Only renders if it is your post) */}
+//                 {isOwner && (
+//                   <button className="delete-btn" onClick={() => handleDeletePost(post.id)}>
+//                     🗑️ Delete
+//                   </button>
+//                 )}
 //               </div>
 
 //               <div className="feed-post-body">
@@ -468,13 +612,18 @@
 //           );
 //         })
 //       ) : !loading ? (
-//         <p style={{ textAlign: 'center', color: colors.textSecondary, marginTop: '40px' }}>
-//           No active team requirements. Be the first!
-//         </p>
+//         <div style={{ textAlign: 'center', padding: '100px 20px', opacity: 0.7 }}>
+//           <span style={{ fontSize: '60px' }}>🔍</span>
+//           <h3 style={{ color: colors.textSecondary }}>
+//             {searchQuery ? "No posts found matching that role." : "No active team requirements. Be the first!"}
+//           </h3>
+//         </div>
 //       ) : null}
 //     </div>
 //   );
 // }
+
+
 
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -488,6 +637,10 @@ export default function Feed() {
   const [error, setError] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // --- NEW: Search State ---
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [formData, setFormData] = useState({
     competitionName: '',
     competitionDate: '',
@@ -588,7 +741,6 @@ export default function Feed() {
     }
   };
 
-  // --- NEW: Handle Delete Post ---
   const handleDeletePost = async (postId) => {
     if (!window.confirm("Are you sure you want to remove this requirement from the team feed? Your team and chat will stay active.")) return;
 
@@ -608,12 +760,43 @@ export default function Feed() {
     }
   };
 
+  // --- Super-Powered Filter Logic ---
+  const filteredPosts = posts.filter(post => {
+    if (!searchQuery) return true; 
+    
+    const query = searchQuery.toLowerCase().trim();
+    const allPostData = Object.values(post).flat().join(' ').toLowerCase();
+    
+    return allPostData.includes(query);
+  });
+
   const styleSheet = `
     .feed-page {
       max-width: 660px;
       margin: 32px auto;
       padding: 0 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    /* --- Search Bar Styles --- */
+    .feed-search-input {
+      width: 100%;
+      box-sizing: border-box; /* IMPORTANT: Prevents padding from causing horizontal overflow */
+      border-radius: 20px;
+      border: 1px solid ${colors.border};
+      background: ${colors.glass};
+      backdrop-filter: blur(20px);
+      color: ${colors.textMain};
+      padding: 16px 22px;
+      font-size: 16px;
+      margin-bottom: 24px;
+      box-shadow: ${colors.shadow};
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .feed-search-input:focus {
+      border-color: ${colors.blue};
+      box-shadow: 0 8px 24px rgba(79, 140, 255, 0.15);
     }
 
     .feed-card {
@@ -648,7 +831,7 @@ export default function Feed() {
       font-weight: 800;
       background: linear-gradient(135deg, ${colors.blueStrong}, #00c7fc);
       box-shadow: 0 14px 28px rgba(79, 140, 255, 0.22);
-      overflow: hidden; /* Important for clean image edges */
+      overflow: hidden;
       padding: 0;
     }
 
@@ -686,6 +869,7 @@ export default function Feed() {
       outline: none;
       padding: 14px 16px;
       font-size: 14px;
+      box-sizing: border-box; /* Ensure paddings don't break width */
       transition: border-color 160ms ease, background 160ms ease;
     }
 
@@ -744,7 +928,7 @@ export default function Feed() {
 
     .feed-post-header {
       display: flex;
-      justify-content: space-between; /* Pushes the delete button to the right */
+      justify-content: space-between;
       padding: 20px 20px 10px;
       align-items: flex-start;
     }
@@ -821,13 +1005,54 @@ export default function Feed() {
       background: ${colors.dangerGhost};
     }
 
+    /* --- MOBILE RESPONSIVE TWEAKS --- */
     @media (max-width: 640px) {
+      .feed-page {
+        margin: 16px auto;
+        padding: 0 12px; /* Less padding on the edges */
+      }
+      
+      .feed-create-box {
+        padding: 16px;
+      }
+      
+      .feed-trigger {
+        font-size: 13px; /* Slightly smaller text so it fits */
+        padding: 12px 14px;
+      }
+      
       .feed-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Stack the form inputs */
       }
 
       .feed-actions {
-        flex-direction: column-reverse;
+        flex-direction: column-reverse; /* Put Cancel below Post */
+      }
+      
+      .feed-actions button {
+        width: 100%; /* Make buttons full width */
+        text-align: center;
+      }
+
+      .feed-post-header {
+        padding: 16px 16px 10px;
+      }
+      
+      .feed-post-body {
+        padding: 0 16px 16px;
+      }
+      
+      .feed-post-footer {
+        padding: 16px;
+      }
+      
+      /* Adjust text size for really small screens to prevent overlap */
+      .feed-user-link h4 {
+        font-size: 15px !important;
+      }
+      
+      .feed-user-link p {
+        font-size: 11px !important;
       }
     }
   `;
@@ -921,6 +1146,15 @@ export default function Feed() {
         ) : null}
       </div>
 
+      {/* --- NEW: Search Bar --- */}
+      <input
+        className="feed-search-input"
+        type="text"
+        placeholder="🔍 Search roles, usernames, teams, dates..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', opacity: 0.78 }}>
         <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${colors.border}` }} />
         <span style={{ fontSize: '13px', fontWeight: '700', color: colors.textSecondary }}>
@@ -932,8 +1166,8 @@ export default function Feed() {
       {error ? <p style={{ color: colors.red, textAlign: 'center' }}>{error}</p> : null}
 
       {/* FEED POSTS LIST */}
-      {posts.length > 0 ? (
-        posts.map((post) => {
+      {filteredPosts.length > 0 ? (
+        filteredPosts.map((post) => {
           const isOwner = post.username === user.username;
           const hasRequested = post.requestedUsernames && post.requestedUsernames.includes(user.username);
           const isAccepted = post.acceptedUsernames && post.acceptedUsernames.includes(user.username);
@@ -1030,8 +1264,10 @@ export default function Feed() {
         })
       ) : !loading ? (
         <div style={{ textAlign: 'center', padding: '100px 20px', opacity: 0.7 }}>
-          <span style={{ fontSize: '60px' }}>🚀</span>
-          <h3 style={{ color: colors.textSecondary }}>No active team requirements. Be the first!</h3>
+          <span style={{ fontSize: '60px' }}>🔍</span>
+          <h3 style={{ color: colors.textSecondary }}>
+            {searchQuery ? "No posts found matching that criteria." : "No active team requirements. Be the first!"}
+          </h3>
         </div>
       ) : null}
     </div>

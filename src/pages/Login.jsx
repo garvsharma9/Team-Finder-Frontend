@@ -1,8 +1,9 @@
-// import React, { useState, useContext } from 'react';
+// import React, { useState, useContext, useEffect } from 'react';
 // import { useNavigate, Link } from 'react-router-dom';
 // import { AuthContext } from '../context/AuthContext';
 // import { themePalette } from '../theme/palette';
 // import { GoogleLogin } from '@react-oauth/google';
+// import { Github } from 'lucide-react';
 
 // export default function Login() {
 //   const [step, setStep] = useState('LOGIN'); // LOGIN, LOGIN_OTP, FORGOT_REQ, FORGOT_RESET
@@ -26,6 +27,53 @@
 //     setMessage(msg);
 //     setOtp('');
 //     setStep(newStep);
+//   };
+
+//   useEffect(() => {
+//     const params = new URLSearchParams(window.location.search);
+//     if (params.get('expired') === 'true') {
+//       setError("Your session has expired. Please log in again.");
+//       // Clean the URL so the message doesn't persist on refresh
+//       window.history.replaceState({}, document.title, window.location.pathname);
+//     }
+//   }, []);
+
+//   // --- GITHUB LOGIN LOGIC ---
+//   useEffect(() => {
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const code = urlParams.get('code');
+
+//     if (code) {
+//       setIsLoading(true);
+//       setMessage("Authenticating with GitHub...");
+      
+//       window.history.replaceState({}, document.title, window.location.pathname);
+
+//       fetch('https://garvsharma9-teamfinder-api.hf.space/public/auth/github', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ code })
+//       })
+//       .then(res => {
+//         if (!res.ok) throw new Error("GitHub Authentication Failed");
+//         return res.json();
+//       })
+//       .then(data => {
+//         login(data.user, data.token);
+//         navigate('/feed');
+//       })
+//       .catch(err => {
+//         setError(err.message);
+//         setIsLoading(false);
+//       });
+//     }
+//   }, [login, navigate]);
+
+  
+//   const initiateGithubLogin = () => {
+//     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+//     const redirectUri = window.location.origin + window.location.pathname; 
+//     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
 //   };
 
 //   //google login
@@ -164,15 +212,31 @@
 
 //         {step === 'LOGIN' && (
 //           <>
-//             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-//               <GoogleLogin
-//                 onSuccess={handleGoogleSuccess}
-//                 onError={() => {
-//                   console.log('Google Login Failed');
+//             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+//               <div style={{ display: 'flex', justifyContent: 'center' }}>
+//                 <GoogleLogin
+//                   onSuccess={handleGoogleSuccess}
+//                   onError={() => {
+//                     console.log('Google Login Failed');
+//                   }}
+//                   useOneTap 
+//                 />
+//               </div>
+
+//               <button 
+//                 type="button"
+//                 onClick={initiateGithubLogin}
+//                 style={{
+//                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+//                   width: '100%', padding: '10px', borderRadius: '4px',
+//                   backgroundColor: '#24292e', color: 'white', border: 'none',
+//                   fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'sans-serif'
 //                 }}
-//                 useOneTap 
-//               />
+//               >
+//                 <Github size={18} /> Continue with GitHub
+//               </button>
 //             </div>
+
 //             <div style={{ textAlign: 'center', margin: '15px 0', color: '#888' }}>
 //               or continue with email
 //             </div>
@@ -256,6 +320,15 @@ export default function Login() {
     setStep(newStep);
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setError("Your session has expired. Please log in again.");
+      // Clean the URL so the message doesn't persist on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // --- GITHUB LOGIN LOGIC ---
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -287,6 +360,7 @@ export default function Login() {
     }
   }, [login, navigate]);
 
+  
   const initiateGithubLogin = () => {
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
     const redirectUri = window.location.origin + window.location.pathname; 
@@ -392,8 +466,8 @@ export default function Login() {
 
   const colors = themePalette;
   const styleSheet = `
-    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; position: relative; }
-    .glass-card { background: ${colors.glass}; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); width: 100%; max-width: 400px; padding: 40px; border-radius: 32px; border: 1px solid ${colors.border}; box-shadow: ${colors.shadowStrong}; z-index: 10; text-align: center; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; position: relative; padding: 20px; box-sizing: border-box; }
+    .glass-card { background: ${colors.glass}; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); width: 100%; max-width: 400px; padding: 40px; border-radius: 32px; border: 1px solid ${colors.border}; box-shadow: ${colors.shadowStrong}; z-index: 10; text-align: center; box-sizing: border-box; }
     .auth-logo { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, ${colors.blue}, ${colors.accent}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; margin-bottom: 10px; }
     .auth-subtitle { color: ${colors.textSecondary}; font-size: 15px; margin-bottom: 30px; font-weight: 500; }
     .auth-input { width: 100%; padding: 16px 20px; margin-bottom: 16px; border: 1px solid ${colors.border}; border-radius: 16px; background: ${colors.mutedSurface}; color: ${colors.textMain}; font-size: 16px; outline: none; transition: 0.2s; box-sizing: border-box; }
@@ -410,6 +484,32 @@ export default function Login() {
     @keyframes float { from { transform: translate(-10%, -10%); } to { transform: translate(10%, 10%); } }
     .link-btn { background: none; border: none; color: ${colors.blue}; font-weight: 700; cursor: pointer; font-size: 14px; margin-top: 10px; padding: 0; }
     .link-btn:hover { text-decoration: underline; }
+
+    /* --- MOBILE RESPONSIVE TWEAKS --- */
+    @media (max-width: 640px) {
+      .auth-page {
+        padding: 16px;
+      }
+      .glass-card {
+        padding: 30px 20px;
+        border-radius: 24px;
+      }
+      .auth-logo {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+      .auth-subtitle {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      .auth-input {
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+      .auth-btn {
+        padding: 14px;
+      }
+    }
   `;
 
   return (

@@ -14,6 +14,19 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('teamFinderToken') || null;
   });
 
+  // --- HELPER: JWT EXPIRY CHECK ---
+  const isTokenExpired = (jwtToken) => {
+    if (!jwtToken) return true;
+    try {
+      const payloadBase64 = jwtToken.split('.')[1];
+      const decodedJson = JSON.parse(atob(payloadBase64));
+      const exp = decodedJson.exp * 1000; // Convert to milliseconds
+      return Date.now() > exp;
+    } catch (e) {
+      return true; // If decoding fails, assume expired
+    }
+  };
+
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
@@ -23,7 +36,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     if (token) {
-      fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=false', {
+      fetch('http://localhost:8080/user/status?online=false', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -32,6 +45,8 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem('teamFinderUser');
     localStorage.removeItem('teamFinderToken');
+    // Force redirect to login page
+    window.location.href = '/login?expired=true';
   };
 
   const updateUser = (updatedFields) => {
@@ -43,18 +58,26 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // --- EFFECT: TOKEN EXPIRY MONITOR ---
+  useEffect(() => {
+    if (token && isTokenExpired(token)) {
+      console.warn("Session expired. Logging out...");
+      logout();
+    }
+  }, [token]);
+
   // --- EFFECT 1: PRESENCE TRACKER (Online/Offline) ---
   useEffect(() => {
     if (!token) return;
 
     // Set Online
-    fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=true', {
+    fetch('http://localhost:8080/user/status?online=true', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     const handleUnload = () => {
-      fetch('https://garvsharma9-teamfinder-api.hf.space/user/status?online=false', {
+      fetch('http://localhost:8080/user/status?online=false', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         keepalive: true 
@@ -70,24 +93,25 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   // --- EFFECT 2: SILENT PROFILE SYNC (Sync with DB) ---
-  // Merged your two sync functions into one efficient call
   useEffect(() => {
     const syncProfile = async () => {
       if (!token || !user?.username) return;
 
       try {
-        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/home/search-by-username/${user.username}`, {
+        const response = await fetch(`http://localhost:8080/home/search-by-username/${user.username}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (response.ok) {
           const freshData = await response.json();
           
-          // Only update state if the data has actually changed (prevents infinite loops)
           if (JSON.stringify(freshData) !== JSON.stringify(user)) {
             updateUser(freshData);
             console.log("Profile synced with database.");
           }
+        } else if (response.status === 401) {
+          // Explicitly catch 401 during sync to log out
+          logout();
         }
       } catch (err) {
         console.error("Auto-sync failed:", err);
