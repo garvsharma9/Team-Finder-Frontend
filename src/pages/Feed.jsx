@@ -26,7 +26,7 @@
 
 //   const fetchPosts = async () => {
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/feed', {
+//       const response = await fetch('http://localhost:8080/post/feed', {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -54,7 +54,7 @@
 //     const postPayload = { ...formData, username: user.username };
 
 //     try {
-//       const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/add-post', {
+//       const response = await fetch('http://localhost:8080/post/add-post', {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -87,7 +87,7 @@
 //   const handleRequestJoin = async (postId) => {
 //     try {
 //       const response = await fetch(
-//         `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`,
+//         `http://localhost:8080/post/${postId}/request?requesterUsername=${user.username}`,
 //         {
 //           method: 'POST',
 //           headers: { Authorization: `Bearer ${token}` },
@@ -118,7 +118,7 @@
 //     if (!window.confirm("Are you sure you want to remove this requirement from the team feed? Your team and chat will stay active.")) return;
 
 //     try {
-//       const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-feed-post/${postId}`, {
+//       const response = await fetch(`http://localhost:8080/post/delete-feed-post/${postId}`, {
 //         method: 'DELETE',
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -653,7 +653,7 @@ export default function Feed() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/feed', {
+      const response = await fetch('http://localhost:8080/post/feed', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -681,7 +681,7 @@ export default function Feed() {
     const postPayload = { ...formData, username: user.username };
 
     try {
-      const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/post/add-post', {
+      const response = await fetch('http://localhost:8080/post/add-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -714,7 +714,7 @@ export default function Feed() {
   const handleRequestJoin = async (postId) => {
     try {
       const response = await fetch(
-        `https://garvsharma9-teamfinder-api.hf.space/post/${postId}/request?requesterUsername=${user.username}`,
+        `http://localhost:8080/post/${postId}/request?requesterUsername=${user.username}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -745,7 +745,7 @@ export default function Feed() {
     if (!window.confirm("Are you sure you want to remove this requirement from the team feed? Your team and chat will stay active.")) return;
 
     try {
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space/post/delete-feed-post/${postId}`, {
+      const response = await fetch(`http://localhost:8080/post/delete-feed-post/${postId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
