@@ -17,8 +17,7 @@
 
 //   const colors = themePalette;
 
-//   // ADDED: The interception logic for the Competition Filter
-// // --- INITIAL DATA LOAD (Event Attendees OR Default Random Users) ---
+//   // --- INITIAL DATA LOAD (Event Attendees OR Default Random Users) ---
 //   useEffect(() => {
 //     const fetchInitialData = async () => {
 //       if (!token) return;
@@ -160,6 +159,7 @@
 //       margin: 40px auto;
 //       padding: 0 20px;
 //       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+//       box-sizing: border-box;
 //     }
 
 //     .search-panel {
@@ -171,6 +171,7 @@
 //       box-shadow: ${colors.shadow};
 //       padding: 30px;
 //       margin-bottom: 34px;
+//       box-sizing: border-box;
 //     }
 
 //     .search-form {
@@ -187,6 +188,7 @@
 //       color: ${colors.textMain};
 //       outline: none;
 //       transition: border-color 160ms ease, background 160ms ease;
+//       box-sizing: border-box; /* IMPORTANT: Keeps padding from breaking width */
 //     }
 
 //     .search-select {
@@ -218,6 +220,7 @@
 //       cursor: pointer;
 //       box-shadow: 0 16px 30px rgba(79, 140, 255, 0.22);
 //       transition: transform 160ms ease, box-shadow 160ms ease;
+//       box-sizing: border-box;
 //     }
 
 //     .search-button:hover:not(:disabled) {
@@ -247,6 +250,7 @@
 //       transition: transform 180ms ease, box-shadow 180ms ease;
 //       display: flex;
 //       flex-direction: column;
+//       box-sizing: border-box;
 //     }
 
 //     .search-card:hover {
@@ -343,18 +347,53 @@
 //       cursor: not-allowed;
 //     }
 
+//     /* --- MOBILE RESPONSIVE TWEAKS --- */
 //     @media (max-width: 720px) {
 //       .search-page {
-//         margin-top: 24px;
+//         margin-top: 20px;
+//         padding: 0 12px;
 //       }
 
 //       .search-panel {
-//         padding: 22px;
+//         padding: 20px 16px;
+//         border-radius: 24px;
 //       }
 
+//       /* Stack the form inputs on mobile */
+//       .search-form {
+//         flex-direction: column;
+//         gap: 10px;
+//       }
+
+//       .search-select, 
+//       .search-input, 
 //       .search-button {
-//         min-height: 50px;
 //         width: 100%;
+//         min-width: 0;
+//         min-height: 48px; /* Easier tapping */
+//       }
+
+//       .search-grid {
+//         grid-template-columns: 1fr;
+//       }
+
+//       /* Stack action buttons cleanly inside the cards */
+//       .search-actions-row {
+//         flex-direction: column;
+//         padding: 0 16px 20px;
+//         gap: 10px;
+//       }
+
+//       .search-like-btn {
+//         width: 100%;
+//         text-align: center;
+//       }
+
+//       /* Ensure the Connection Button component stretches if it can */
+//       .search-actions-row > * {
+//         width: 100%;
+//         display: flex;
+//         justify-content: center;
 //       }
 //     }
 //   `;
@@ -408,7 +447,7 @@
 //         </p>
 //       ) : null}
 
-//       {/* ADDED: Event Attendee Alert Banner */}
+//       {/* Event Attendee Alert Banner */}
 //       {isEventFilter && !loading && !error && (
 //         <div style={{
 //           marginBottom: '24px', padding: '16px 20px', background: colors.primaryGhost,
@@ -420,7 +459,7 @@
 //             onClick={clearEventFilter}
 //             style={{
 //               background: 'transparent', border: 'none', color: colors.blue, cursor: 'pointer',
-//               textDecoration: 'underline', fontWeight: '700', fontSize: '14px'
+//               textDecoration: 'underline', fontWeight: '700', fontSize: '14px', padding: 0
 //             }}
 //           >
 //             Clear Filter
@@ -517,21 +556,24 @@
 // }
 
 import React, { useContext, useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // ADDED: useLocation & useNavigate
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { themePalette } from '../theme/palette';
 import ConnectionButton from '../components/ConnectionButton';
 
 export default function Search() {
   const { user, token } = useContext(AuthContext);
-  const location = useLocation(); // ADDED
-  const navigate = useNavigate(); // ADDED
+  const location = useLocation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [searchType, setSearchType] = useState('name');
+  
+  // CHANGED: Default to 'all' so it is fuzzy by default!
+  const [searchType, setSearchType] = useState('all'); 
+  
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isEventFilter, setIsEventFilter] = useState(false); // ADDED: To track if we are viewing event attendees
+  const [isEventFilter, setIsEventFilter] = useState(false);
 
   const colors = themePalette;
 
@@ -547,7 +589,6 @@ export default function Search() {
       setError('');
 
       if (interestedUsernamesStr) {
-        // SCENARIO 1: User came from an Event page
         setIsEventFilter(true);
         const usernameArray = interestedUsernamesStr.split(',');
 
@@ -574,10 +615,8 @@ export default function Search() {
           setLoading(false);
         }
       } else {
-        // SCENARIO 2: Normal Search page load (Fetch 10 default users)
         setIsEventFilter(false);
         try {
-          // Reusing your algorithm endpoint to get 10 high-quality random profiles
           const response = await fetch('https://garvsharma9-teamfinder-api.hf.space/user/suggested-teammates', {
             headers: { 'Authorization': `Bearer ${token}` }
           });
@@ -606,29 +645,70 @@ export default function Search() {
     setError('');
     setResults([]);
     
-    // Clear any event filters if the user does a manual search
     if (isEventFilter) {
       navigate('/search', { replace: true });
       setIsEventFilter(false);
     }
 
     try {
-      let endpoint = '';
-      if (searchType === 'name') endpoint = `/home/search-by-name/${query}`;
-      if (searchType === 'skill') endpoint = `/home/search-by-skill/${query}`;
-      if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
+      let fetchedData = [];
 
-      const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (searchType === 'all') {
+        // --- NEW: FUZZY SEARCH (Hits all endpoints at once) ---
+        const endpoints = [
+          `/home/search-by-name/${query}`,
+          `/home/search-by-skill/${query}`,
+          `/home/search-by-username/${query}`
+        ];
 
-      if (!response.ok) {
-        throw new Error('No users found matching that criteria.');
+        // Fire all 3 requests simultaneously
+        const requests = endpoints.map(ep => 
+          fetch(`https://garvsharma9-teamfinder-api.hf.space${ep}`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => null) // Ignore individual 404s
+        );
+
+        const responses = await Promise.all(requests);
+
+        // Extract data from whichever endpoints succeeded
+        for (const response of responses) {
+          if (response && response.ok) {
+            const data = await response.json();
+            const arr = Array.isArray(data) ? data : data ? [data] : [];
+            fetchedData = [...fetchedData, ...arr];
+          }
+        }
+
+        // Deduplicate the results so the same user doesn't appear twice
+        fetchedData = Array.from(new Map(fetchedData.map(item => [item.username, item])).values());
+
+        if (fetchedData.length === 0) {
+          throw new Error('No users found matching that criteria anywhere.');
+        }
+
+      } else {
+        // --- ORIGINAL: STRICT SEARCH ---
+        let endpoint = '';
+        if (searchType === 'name') endpoint = `/home/search-by-name/${query}`;
+        if (searchType === 'skill') endpoint = `/home/search-by-skill/${query}`;
+        if (searchType === 'username') endpoint = `/home/search-by-username/${query}`;
+
+        const response = await fetch(`https://garvsharma9-teamfinder-api.hf.space${endpoint}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error(`No users found matching that ${searchType}.`);
+        }
+
+        const data = await response.json();
+        fetchedData = Array.isArray(data) ? data : data ? [data] : [];
       }
 
-      const data = await response.json();
-      setResults(Array.isArray(data) ? data : data ? [data] : []);
+      setResults(fetchedData);
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -706,7 +786,7 @@ export default function Search() {
       color: ${colors.textMain};
       outline: none;
       transition: border-color 160ms ease, background 160ms ease;
-      box-sizing: border-box; /* IMPORTANT: Keeps padding from breaking width */
+      box-sizing: border-box; 
     }
 
     .search-select {
@@ -877,7 +957,6 @@ export default function Search() {
         border-radius: 24px;
       }
 
-      /* Stack the form inputs on mobile */
       .search-form {
         flex-direction: column;
         gap: 10px;
@@ -888,14 +967,13 @@ export default function Search() {
       .search-button {
         width: 100%;
         min-width: 0;
-        min-height: 48px; /* Easier tapping */
+        min-height: 48px;
       }
 
       .search-grid {
         grid-template-columns: 1fr;
       }
 
-      /* Stack action buttons cleanly inside the cards */
       .search-actions-row {
         flex-direction: column;
         padding: 0 16px 20px;
@@ -907,7 +985,6 @@ export default function Search() {
         text-align: center;
       }
 
-      /* Ensure the Connection Button component stretches if it can */
       .search-actions-row > * {
         width: 100%;
         display: flex;
@@ -929,10 +1006,12 @@ export default function Search() {
         </p>
 
         <form className="search-form" onSubmit={handleSearch}>
+          {/* CHANGED: Added the new "All" option to the dropdown */}
           <select className="search-select" value={searchType} onChange={(event) => setSearchType(event.target.value)}>
-            <option value="skill">By Skill</option>
-            <option value="name">By Name</option>
-            <option value="username">By Username</option>
+            <option value="all">All</option>
+            <option value="skill">Strict: By Skill</option>
+            <option value="name">Strict: By Name</option>
+            <option value="username">Strict: By Username</option>
           </select>
 
           <input
