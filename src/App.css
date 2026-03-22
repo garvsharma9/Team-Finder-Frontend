@@ -536,3 +536,115 @@ textarea::placeholder {
 [data-theme='dark'] .tf-glass-hover:hover {
   box-shadow: var(--tf-shadow-strong) !important;
 }
+
+/* --- RESPONSIVE DISPLAY UTILITIES --- */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  /* Ensure the main content doesn't get hidden behind the bottom bar */
+  #root, .main-content-area {
+    padding-bottom: 70px; 
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* --- MOBILE BOTTOM BAR --- */
+.mobile-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  /* Matched to your custom theme variables */
+  background: var(--tf-sidebar-bg); 
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  border-top: 1px solid var(--tf-border);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom); /* Fix for iPhones */
+}
+
+.mobile-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--tf-text-secondary); 
+  text-decoration: none;
+  width: 100%;
+  height: 100%;
+}
+
+.mobile-nav-link[data-active="true"] {
+  color: var(--tf-primary); 
+}
+
+.mobile-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--tf-danger); 
+  border-radius: 50%;
+  border: 2px solid var(--tf-bg); 
+}
+
+/* --- MOBILE DRAWER --- */
+.mobile-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1001;
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: column;
+}
+
+.mobile-drawer-content {
+  background: var(--tf-bg); 
+  padding: 24px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-top: 1px solid var(--tf-border);
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawer-theme {
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

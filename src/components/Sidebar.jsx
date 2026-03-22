@@ -126,6 +126,21 @@
 //       data-collapsed={isCollapsed ? 'true' : 'false'}
 //       style={{ '--sidebar-width': isCollapsed ? '88px' : '272px' }}
 //     >
+//       {/* --- NEW: Hide scrollbar but allow scrolling --- */}
+//       <style>
+//         {`
+//           .sidebar-shell {
+//             overflow-y: auto;
+//             overflow-x: hidden;
+//             -ms-overflow-style: none;  /* IE and Edge */
+//             scrollbar-width: none;  /* Firefox */
+//           }
+//           .sidebar-shell::-webkit-scrollbar {
+//             display: none; /* Chrome, Safari and Opera */
+//           }
+//         `}
+//       </style>
+
 //       <div className="sidebar-header">
 //         <Link to="/" className="sidebar-brand" title={isCollapsed ? 'TeamFinder' : undefined}>
 //           <span className="sidebar-brand-mark">
@@ -243,10 +258,11 @@
 //   );
 // }
 
+
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Bell, // NEW: Added the Bell icon
+  Bell,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -261,18 +277,19 @@ import {
   SunMedium,
   User,
   UserPlus,
+  Menu, // NEW
+  X // NEW
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-// Updated the Connections item to use the Bell and an unreadKey
 const primaryNavItems = [
   { icon: Home, label: 'Home', to: '/' },
   { icon: Newspaper, label: 'Team Feed', to: '/feed' },
   { icon: SearchIcon, label: 'Find Members', to: '/search' },
   { icon: CalendarDays, label: 'Campus Events', to: '/events' },
   { icon: MessageCircle, label: 'Chat', to: '/chat', unreadKey: 'chat' },
-  { icon: Bell, label: 'Network', to: '/network', unreadKey: 'network' } 
+  { icon: Bell, label: 'Network', to: '/network', unreadKey: 'network' }
 ];
 
 const accountNavItems = [
@@ -287,8 +304,8 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // NEW
 
-  // NEW: Calculate pending connection requests instantly from the AuthContext
   const networkUnreadTotal = user?.connectionRequestsReceived?.length || 0;
 
   useEffect(() => {
@@ -305,7 +322,6 @@ export default function Sidebar() {
           setChatUnreadTotal(0);
           return;
         }
-
         const parsed = JSON.parse(raw);
         const teamTotal = Object.values(parsed?.team || {}).reduce((sum, count) => sum + count, 0);
         const dmTotal = Object.values(parsed?.dm || {}).reduce((sum, count) => sum + count, 0);
@@ -328,6 +344,7 @@ export default function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setIsMobileMenuOpen(false);
   };
 
   const handleSidebarToggle = () => {
@@ -336,10 +353,9 @@ export default function Sidebar() {
     window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: nextState }));
   };
 
-  const renderNavItem = ({ icon: Icon, label, to, unreadKey }) => {
+  // Modified to handle both desktop and mobile layouts
+  const renderNavItem = ({ icon: Icon, label, to, unreadKey }, isMobileBottom = false) => {
     const isActive = location.pathname === to;
-    
-    // NEW: Determine which unread count to show based on the key
     let unreadCount = 0;
     if (unreadKey === 'chat') unreadCount = chatUnreadTotal;
     if (unreadKey === 'network') unreadCount = networkUnreadTotal;
@@ -348,157 +364,156 @@ export default function Sidebar() {
       <Link
         key={to}
         to={to}
-        className="sidebar-nav-link"
+        className={isMobileBottom ? "mobile-nav-link" : "sidebar-nav-link"}
         data-active={isActive}
         title={isCollapsed ? label : undefined}
+        onClick={() => setIsMobileMenuOpen(false)} // Close drawer if clicked
       >
-        <span className="sidebar-icon">
-          <Icon size={18} strokeWidth={2.1} />
+        <span className="sidebar-icon" style={{ position: 'relative' }}>
+          <Icon size={isMobileBottom ? 24 : 18} strokeWidth={isMobileBottom ? 2 : 2.1} />
+          {/* Badge logic for mobile bottom icons */}
+          {isMobileBottom && unreadCount > 0 && (
+             <span className="mobile-badge"></span>
+          )}
         </span>
-        <span className="sidebar-label-wrap">
-          <span className="sidebar-label">{label}</span>
-          {unreadCount > 0 ? (
-            <span className="sidebar-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-          ) : null}
-        </span>
+        
+        {!isMobileBottom && (
+          <span className="sidebar-label-wrap">
+            <span className="sidebar-label">{label}</span>
+            {unreadCount > 0 && (
+              <span className="sidebar-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+            )}
+          </span>
+        )}
       </Link>
     );
   };
 
+  // Define which items go where on mobile
+  const mobileBottomItems = primaryNavItems.filter(item => 
+    ['Home', 'Find Members', 'Network', 'Chat'].includes(item.label)
+  );
+  const mobileDrawerItems = primaryNavItems.filter(item => 
+    !['Home', 'Find Members', 'Network', 'Chat'].includes(item.label)
+  );
+
   return (
-    <aside
-      className="sidebar-shell"
-      data-collapsed={isCollapsed ? 'true' : 'false'}
-      style={{ '--sidebar-width': isCollapsed ? '88px' : '272px' }}
-    >
-      {/* --- NEW: Hide scrollbar but allow scrolling --- */}
-      <style>
-        {`
-          .sidebar-shell {
-            overflow-y: auto;
-            overflow-x: hidden;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-          }
-          .sidebar-shell::-webkit-scrollbar {
-            display: none; /* Chrome, Safari and Opera */
-          }
-        `}
-      </style>
+    <>
+      {/* --- DESKTOP SIDEBAR (Hidden on Mobile) --- */}
+      <aside
+        className="sidebar-shell desktop-only"
+        data-collapsed={isCollapsed ? 'true' : 'false'}
+        style={{ '--sidebar-width': isCollapsed ? '88px' : '272px' }}
+      >
+        {/* Your existing <style> tag */}
+        <style>
+          {`
+            .sidebar-shell { overflow-y: auto; overflow-x: hidden; -ms-overflow-style: none; scrollbar-width: none; }
+            .sidebar-shell::-webkit-scrollbar { display: none; }
+          `}
+        </style>
 
-      <div className="sidebar-header">
-        <Link to="/" className="sidebar-brand" title={isCollapsed ? 'TeamFinder' : undefined}>
-          <span className="sidebar-brand-mark">
-            <img
-              src="/favicon.svg"
-              alt="TeamFinder logo"
-              style={{ width: '26px', height: '26px', objectFit: 'contain' }}
-            />
-          </span>
-          <span className="sidebar-brand-copy">
-            <span className="sidebar-brand-title">TeamFinder</span>
-            <span className="sidebar-brand-subtitle">Build with the right crew</span>
-          </span>
-        </Link>
+        <div className="sidebar-header">
+          <Link to="/" className="sidebar-brand" title={isCollapsed ? 'TeamFinder' : undefined}>
+            <span className="sidebar-brand-mark">
+              <img src="/favicon.svg" alt="TeamFinder logo" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
+            </span>
+            <span className="sidebar-brand-copy">
+              <span className="sidebar-brand-title">TeamFinder</span>
+              <span className="sidebar-brand-subtitle">Build with the right crew</span>
+            </span>
+          </Link>
+          <button type="button" className="sidebar-collapse" onClick={handleSidebarToggle}>
+            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className="sidebar-collapse"
-          onClick={handleSidebarToggle}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        <nav className="sidebar-nav">
+          {primaryNavItems.map(item => renderNavItem(item, false))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          {user ? (
+            <>
+              {accountNavItems.map(item => renderNavItem(item, false))}
+              {/* Desktop Theme Toggle */}
+              <div className="sidebar-theme-row">
+                <div className="sidebar-theme-copy">
+                  <span className="sidebar-theme-title">Dark mode</span>
+                </div>
+                <button type="button" className="theme-switch" data-active={isDark ? 'true' : 'false'} onClick={toggleTheme}>
+                  <span className="theme-switch-thumb">{isDark ? <Moon size={12} /> : <SunMedium size={12} />}</span>
+                </button>
+              </div>
+              <button type="button" className="sidebar-logout" onClick={handleLogout}>
+                <span className="sidebar-icon"><LogOut size={18} /></span>
+                <span className="sidebar-label">Sign Out</span>
+              </button>
+            </>
+          ) : (
+            <>
+               <div className="sidebar-theme-row">
+                <div className="sidebar-theme-copy">
+                  <span className="sidebar-theme-title">Dark mode</span>
+                </div>
+                <button type="button" className="theme-switch" data-active={isDark ? 'true' : 'false'} onClick={toggleTheme}>
+                  <span className="theme-switch-thumb">{isDark ? <Moon size={12} /> : <SunMedium size={12} />}</span>
+                </button>
+              </div>
+              <Link to="/login" className="sidebar-action-button"><LogIn size={18} /><span className="sidebar-label">Log In</span></Link>
+              <Link to="/signup" className="sidebar-action-button"><UserPlus size={18} /><span className="sidebar-label">Sign Up</span></Link>
+            </>
+          )}
+        </div>
+      </aside>
+
+      {/* --- MOBILE BOTTOM NAVIGATION (Hidden on Desktop) --- */}
+      <nav className="mobile-bottom-bar mobile-only">
+        {mobileBottomItems.map(item => renderNavItem(item, true))}
+        
+        <button 
+          className="mobile-nav-link menu-trigger" 
+          onClick={() => setIsMobileMenuOpen(true)}
         >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          <Menu size={24} strokeWidth={2} />
         </button>
-      </div>
-
-      <nav className="sidebar-nav">
-        {primaryNavItems.map(renderNavItem)}
       </nav>
 
-      <div className="sidebar-bottom">
-        {user ? (
-          <>
-            {accountNavItems.map(renderNavItem)}
-            <div className="sidebar-theme-row">
-              <div className="sidebar-theme-copy">
-                <span className="sidebar-theme-title">Dark mode</span>
-                <span className="sidebar-theme-note">
-                  {isDark ? 'Midnight glass enabled' : 'Switch to the darker canvas'}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="theme-switch"
-                data-active={isDark ? 'true' : 'false'}
-                onClick={toggleTheme}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={isCollapsed ? 'Toggle dark mode' : undefined}
-              >
-                <span className="theme-switch-thumb">
-                  {isDark ? <Moon size={12} /> : <SunMedium size={12} />}
-                </span>
-              </button>
+      {/* --- MOBILE "MORE" DRAWER --- */}
+      {isMobileMenuOpen && (
+        <div className="mobile-drawer-overlay mobile-only">
+          <div className="mobile-drawer-content">
+            <div className="drawer-header">
+              <h3>More Options</h3>
+              <button onClick={() => setIsMobileMenuOpen(false)}><X size={24} /></button>
             </div>
-            <button type="button" className="sidebar-logout" onClick={handleLogout}>
-              <span className="sidebar-icon">
-                <LogOut size={18} strokeWidth={2.1} />
-              </span>
-              <span className="sidebar-label">Sign Out</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="sidebar-theme-row">
-              <div className="sidebar-theme-copy">
-                <span className="sidebar-theme-title">Dark mode</span>
-                <span className="sidebar-theme-note">
-                  {isDark ? 'Midnight glass enabled' : 'Switch to the darker canvas'}
-                </span>
+            
+            <nav className="drawer-nav">
+              {mobileDrawerItems.map(item => renderNavItem(item, false))}
+              {user && accountNavItems.map(item => renderNavItem(item, false))}
+              
+              <div className="sidebar-theme-row drawer-theme">
+                <span className="sidebar-theme-title">Dark Mode</span>
+                <button type="button" className="theme-switch" data-active={isDark ? 'true' : 'false'} onClick={toggleTheme}>
+                  <span className="theme-switch-thumb">{isDark ? <Moon size={12} /> : <SunMedium size={12} />}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                className="theme-switch"
-                data-active={isDark ? 'true' : 'false'}
-                onClick={toggleTheme}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={isCollapsed ? 'Toggle dark mode' : undefined}
-              >
-                <span className="theme-switch-thumb">
-                  {isDark ? <Moon size={12} /> : <SunMedium size={12} />}
-                </span>
-              </button>
-            </div>
 
-            <Link
-              to="/login"
-              className="sidebar-action-button"
-              data-active={location.pathname === '/login'}
-              title={isCollapsed ? 'Log In' : undefined}
-            >
-              <span className="sidebar-icon">
-                <LogIn size={18} strokeWidth={2.1} />
-              </span>
-              <span className="sidebar-label-wrap">
-                <span className="sidebar-label">Log In</span>
-              </span>
-            </Link>
-
-            <Link
-              to="/signup"
-              className="sidebar-action-button"
-              data-active={location.pathname === '/signup'}
-              title={isCollapsed ? 'Sign Up' : undefined}
-            >
-              <span className="sidebar-icon">
-                <UserPlus size={18} strokeWidth={2.1} />
-              </span>
-              <span className="sidebar-label-wrap">
-                <span className="sidebar-label">Sign Up</span>
-              </span>
-            </Link>
-          </>
-        )}
-      </div>
-    </aside>
+              {user ? (
+                <button type="button" className="sidebar-logout" onClick={handleLogout}>
+                  <span className="sidebar-icon"><LogOut size={18} /></span>
+                  <span className="sidebar-label">Sign Out</span>
+                </button>
+              ) : (
+                <div className="drawer-auth-buttons">
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="sidebar-action-button">Log In</Link>
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="sidebar-action-button">Sign Up</Link>
+                </div>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
