@@ -1,0 +1,16 @@
+{
+  "short_name": "TeamFinder",
+  "name": "TeamFinder | Find Student Developers",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#121212",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
