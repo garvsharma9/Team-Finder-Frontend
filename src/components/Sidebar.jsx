@@ -33,7 +33,7 @@ const primaryNavItems = [
 
 const accountNavItems = [
   { icon: User, label: 'My Profile', to: '/dashboard' },
-  { icon: Settings, label: 'Settings', to: '/manage-teams' },
+  { icon: Settings, label: 'Workspace', to: '/manage-teams' },
 ];
 
 export default function Sidebar() {
